@@ -5,7 +5,7 @@ import { useRef } from "react";
 import { ImageIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+// useRouter removed: not used in this component
 import Image from "next/image";
 
 import { z } from "zod";
@@ -40,14 +40,16 @@ export const CreateProjectForm = ({ onCancel }: CreateProjectFormProps) => {
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const form = useForm<z.infer<typeof createProjectSchema>>({
-    resolver: zodResolver(createProjectSchema.omit({ workspaceId: true })),
+  const createProjectInputSchema = createProjectSchema.omit({ workspaceId: true });
+
+  const form = useForm<z.infer<typeof createProjectInputSchema>>({
+    resolver: zodResolver(createProjectInputSchema),
     defaultValues: {
       name: "",
     },
   });
 
-  const onSubmit = ( values: z.infer<typeof createProjectSchema> ) => {
+  const onSubmit = ( values: z.infer<typeof createProjectInputSchema> ) => {
     const finalValues = { 
       ...values,
       workspaceId,
@@ -147,7 +149,7 @@ export const CreateProjectForm = ({ onCancel }: CreateProjectFormProps) => {
                             size="xs"
                             className="w-fit mt-2"
                             onClick={() => {
-                              field.onChange(null);
+                              field.onChange("");
                               if (inputRef.current) {
                                 inputRef.current.value = "";
                               }

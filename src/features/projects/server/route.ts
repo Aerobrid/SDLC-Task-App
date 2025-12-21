@@ -48,16 +48,20 @@ const app = new Hono()
         uploadedImageUrl = `${endpoint}/v1/storage/buckets/${IMAGES_BUCKET_ID}/files/${uploadedImageId}/view?project=${APPW_PROJECT_ID}&mode=admin`;
       }
 
+      const projectData: Record<string, unknown> = {
+        name,
+        workspaceId,
+      };
+
+      if (uploadedImageUrl) {
+        projectData.imageUrl = uploadedImageUrl;
+      }
+
       const project = await databases.createDocument(
         DATABASE_ID,
         PROJECTS_ID,
         ID.unique(),
-        {
-          name,
-          imageId: uploadedImageId, 
-          imageUrl: uploadedImageUrl,
-          workspaceId
-        },
+        projectData,
       );
 
       return c.json({ data: project });

@@ -24,22 +24,44 @@ export const useCreateProject = () => {
   >({
     // when called, a request is made to the login endpoint
     mutationFn: async ({ form }) => {
-      // takes json data from the request and makes a POST request to the login endpoint
-      const response = await client.api.projects["$post"]({ form });
-      
-      if (!response.ok) {
-        throw new Error("Failed to create project");
+      // If an image File is present, send as multipart FormData (browser File can't be JSON-stringified)
+      if (form.image instanceof File) {
+        const fd = new FormData();
+        fd.append("name", String(form.name));
+        fd.append("workspaceId", String(form.workspaceId));
+        fd.append("image", form.image as unknown as Blob);
+
+        const response = await fetch(`/api/projects`, {
+          method: "POST",
+          body: fd,
+          credentials: "same-origin",
+        });
+
+        if (!response.ok) {
+          const text = await response.text().catch(() => response.statusText);
+          throw new Error(text || "Failed to create project");
+        }
+
+        return await response.json();
       }
-      
-      // returns the parsed JSON response from the API
-      return  await response.json();
+
+      // otherwise send JSON via the RPC client
+      const response = await client.api.projects["$post"]({ form });
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => response.statusText);
+        throw new Error(text || "Failed to create project");
+      }
+
+      return await response.json();
     },
     onSuccess: () => {
       toast.success("Project created");
       queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
-    onError: () => {
-      toast.error("Failed to create project");
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message || "Failed to create project");
     }
   });
   // Return the mutation object with properties like isLoading, error, and mutate
