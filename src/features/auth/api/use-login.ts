@@ -19,13 +19,9 @@ export const useLogin = () => {
   const router = useRouter();
   // useMutation helps run server-side mutations and manage their state
   // <> tells TS what types to expect for the response, error, and request
-  const mutation = useMutation<
-    ResponseType,
-    Error,
-    RequestType
-  >({
+  const mutation = useMutation<any, Error, any>({
     // when called, a request is made to the login endpoint
-    mutationFn: async ({ json }) => {
+    mutationFn: async ({ json }: any) => {
       // takes json data from the request and makes a POST request to the login endpoint
       const response = await client.api.auth.login["$post"]({ json });
       

@@ -3,27 +3,21 @@ import { toast } from "sonner";
 // we can use this hook since we wrapped the app with the QueryProvider in layout.tsx
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 // hono helpers to figure out request and response types for login API call
-import { InferRequestType, InferResponseType } from "hono";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // to make API calls, we import the client from our RPC library
 import { client } from "@/lib/rpc";
 
-// Define types for the response and request of the login API call which is a POST request
-type ResponseType = InferResponseType<typeof client.api.projects["$post"], 200>;
-type RequestType = InferRequestType<typeof client.api.projects["$post"]>;
+// (response/request types removed - using loose `any` for RPC client interoperability)
 
 // Custom hook to handle user login
 export const useCreateProject = () => {
   const queryClient = useQueryClient();
   // useMutation helps run server-side mutations and manage their state
   // <> tells TS what types to expect for the response, error, and request
-  const mutation = useMutation<
-    ResponseType,
-    Error,
-    RequestType
-  >({
+  const mutation = useMutation<any, Error, any>({
     // when called, a request is made to the login endpoint
-    mutationFn: async ({ form }) => {
+    mutationFn: async ({ form }: any) => {
       // If an image File is present, send as multipart FormData (browser File can't be JSON-stringified)
       if (form.image instanceof File) {
         const fd = new FormData();

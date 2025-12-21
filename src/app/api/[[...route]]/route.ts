@@ -9,16 +9,18 @@ import auth from "@/features/auth/server/route";
 import workspaces from "@/features/workspaces/server/route";
 import members from "@/features/members/server/route";
 import projects from "@/features/projects/server/route";
+import tasks from "@/features/tasks/server/route";
 
 // creating a new Hono application instance with a base path of /api
 const app = new Hono().basePath("/api");
 
-// defining the /auth route and attaching the auth routes to it
-const routes = app
+// attach modular routes to the app instance
+app
   .route("/auth", auth)
   .route("/workspaces", workspaces)
   .route("/members", members)
-  .route("/projects", projects);
+  .route("/projects", projects)
+  .route("/tasks", tasks);
 
 // defining the GET route for the application
 export const GET = handle(app);
@@ -28,4 +30,4 @@ export const PATCH = handle(app);
 export const DELETE = handle(app);
 
 // Exporting the routes type for use in other parts of the application
-export type AppType = typeof routes;
+export type AppType = typeof app;

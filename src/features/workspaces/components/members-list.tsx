@@ -84,7 +84,8 @@ export const MembersList = () => {
         <DottedSeparator />
       </div>
       <CardContent className="p-7">
-        {data?.documents.map((member, index) => (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        {data?.documents.map((member: any, index: number) => (
           <Fragment key={member.$id}>
             {/* Render member details here */}
             <div className="flex items-center gap-2">

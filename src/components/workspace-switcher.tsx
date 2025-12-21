@@ -8,6 +8,7 @@ import { WorkspaceAvatar } from "@/features/workspaces/components/workspace-avat
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useCreateWorkspaceModel } from "@/features/workspaces/hooks/use-create-workspace-model";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Select,
   SelectContent,
@@ -37,7 +38,7 @@ export const WorkspaceSwitcher = () => {
           <SelectValue placeholder="No workspace selected" />
         </SelectTrigger>
         <SelectContent>
-          {workspaces?.documents.map((workspace) => (
+          {workspaces?.documents.map((workspace: any) => (
             <SelectItem key={workspace.$id} value={workspace.$id}>
               <div className="flex justify-start items-center gap-3 font-medium">
                 <WorkspaceAvatar name={workspace.name} image={workspace.imageUrl} />

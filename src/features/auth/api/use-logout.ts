@@ -15,10 +15,7 @@ export const useLogout = () => {
   const queryClient = useQueryClient();
   
   // to handle the logout mutation
-  const mutation = useMutation<
-    ResponseType,
-    Error
-  >({
+  const mutation = useMutation<any, Error, any>({
     // when called, a request is made to the logout endpoint
     // the request does not require any body, so we don't pass any parameters
     mutationFn: async () => {

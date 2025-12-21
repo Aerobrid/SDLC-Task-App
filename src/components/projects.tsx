@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { RiAddCircleFill } from "react-icons/ri";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { cn } from "@/lib/utils";
 import { useGetProjects } from "@/features/projects/api/use-get-projects";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
@@ -27,7 +28,7 @@ export const Projects = () => {
           <p className="text-xs uppercase text-neutral-500">Projects</p>
           <RiAddCircleFill onClick={open} className="size-5 text-neutral-500 cursor-pointer hover:opacity-75 transition"/>
         </div>
-        {data?.documents.map((project) => {
+        {data?.documents.map((project: any) => {
           const href = `/workspaces/${workspaceId}/projects/${projectId}`;
           const isActive = pathname === href;
 
