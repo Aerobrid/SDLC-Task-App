@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { normalizeStatus } from "@/lib/utils";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { Card } from "@/components/ui/card";
 import { KanbanColumnHeader } from "./kanban-column-header";
@@ -48,8 +49,8 @@ const DataKanban = ({ tasks, workspaceId, projectsById = {}, membersByUserId = {
   const initialBoard: Record<string, Task[]> = {};
   for (const s of STATUS_ORDER) initialBoard[s] = [];
   for (const t of tasks) {
-    const s = (t.status ?? "todo") as string;
-    const ns = s === "inprogress" ? "in-progress" : s;
+    const s = normalizeStatus(t.status);
+    const ns = s;
     if (!initialBoard[ns]) initialBoard[ns] = [];
     initialBoard[ns].push(t);
   }
@@ -61,8 +62,8 @@ const DataKanban = ({ tasks, workspaceId, projectsById = {}, membersByUserId = {
     const next: Record<string, Task[]> = {};
     for (const s of STATUS_ORDER) next[s] = [];
     for (const t of tasks) {
-      const s = (t.status ?? "todo") as string;
-      const ns = s === "inprogress" ? "in-progress" : s;
+      const s = normalizeStatus(t.status);
+      const ns = s;
       if (!next[ns]) next[ns] = [];
       next[ns].push(t);
     }

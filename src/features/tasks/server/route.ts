@@ -82,8 +82,10 @@ app.post(
         }
         taskData.position = max + 1;
       } catch (err: unknown) {
-        // eslint-disable-next-line no-console
-        console.warn("Could not compute default position for task create", err);
+        if (process.env.NODE_ENV !== "production") {
+          // eslint-disable-next-line no-console
+          console.warn("Could not compute default position for task create", err);
+        }
       }
     }
 

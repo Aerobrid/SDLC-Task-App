@@ -80,10 +80,9 @@ export default function TasksPage() {
     const map: Record<'backlog'|'todo'|'inprogress'|'in-review'|'done', Task[]> = { backlog: [], todo: [], inprogress: [], 'in-review': [], done: [] };
     tasks.forEach((t) => {
       const raw = (t.status ?? "todo") as string;
-      let s = raw;
-      if (raw === "in-progress") s = "inprogress"; // normalize
-      if (raw === "inreview") s = "in-review";
-      const key = s === 'backlog' ? 'backlog' : s === 'inprogress' ? 'inprogress' : s === 'in-review' ? 'in-review' : s === 'done' ? 'done' : 'todo';
+      // normalize legacy values then map to the slots used by the UI
+      const ns = raw === "in-progress" ? "in-progress" : raw === "inreview" ? "in-review" : raw;
+      const key = ns === 'backlog' ? 'backlog' : ns === 'in-progress' ? 'inprogress' : ns === 'in-review' ? 'in-review' : ns === 'done' ? 'done' : 'todo';
       map[key].push(t);
     });
     return map;

@@ -15,3 +15,11 @@ export function generateInviteCode(length: number) {
 
   return result;
 };
+
+export function normalizeStatus(s?: unknown) {
+  const str = String(s ?? "").trim();
+  if (!str) return "todo";
+  if (str === "inprogress") return "in-progress";
+  if (str === "inreview") return "in-review";
+  return str;
+}

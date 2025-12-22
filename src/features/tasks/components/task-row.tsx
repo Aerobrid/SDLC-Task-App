@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { normalizeStatus } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
 import { parseISO, isValid, format } from "date-fns";
@@ -54,8 +55,8 @@ export const TaskRow = ({ t, projectsById, membersByUserId, workspaceId, setEdit
         </div>
         <div className="w-36 text-sm text-muted-foreground">{t.dueDate && isValid(parseISO(t.dueDate)) ? format(parseISO(t.dueDate), "MMM d, yyyy") : "—"}</div>
         <div className="w-24">
-          {(() => {
-            const s = t.status ?? 'todo';
+            {(() => {
+            const s = normalizeStatus(t.status);
             const label = s === 'in-progress' || s === 'inprogress' ? 'In progress' : s === 'in-review' ? 'In review' : s === 'backlog' ? 'Backlog' : s === 'done' ? 'Done' : 'To do';
             const cls = s === 'backlog'
               ? 'bg-violet-100 text-violet-800 border-violet-200'
@@ -101,8 +102,8 @@ export const TaskRow = ({ t, projectsById, membersByUserId, workspaceId, setEdit
         </div>
         <div className="text-sm text-muted-foreground">{t.dueDate && isValid(parseISO(t.dueDate)) ? format(parseISO(t.dueDate), 'MMM d, yyyy') : '—'}</div>
         <div className="flex items-center justify-between">
-          <div>{(() => {
-              const s = t.status ?? 'todo';
+            <div>{(() => {
+              const s = normalizeStatus(t.status);
               const label = s === 'in-progress' || s === 'inprogress' ? 'In progress' : s === 'in-review' ? 'In review' : s === 'backlog' ? 'Backlog' : s === 'done' ? 'Done' : 'To do';
               const cls = s === 'backlog'
                 ? 'bg-violet-100 text-violet-800 border-violet-200'

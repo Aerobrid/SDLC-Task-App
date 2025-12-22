@@ -6,6 +6,7 @@ import { useGetProjects } from "@/features/projects/api/use-get-projects";
 import { useGetTasks } from "@/features/tasks/api/use-get-tasks";
 import { useGetMembers } from "@/features/members/api/use-get-members";
 import { useCurrent } from "@/features/auth/api/use-current";
+import { normalizeStatus } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { DottedSeparator } from "@/components/dotted-separator";
 import TaskRow from "@/features/tasks/components/task-row";
@@ -36,7 +37,7 @@ export default function HomeAnalytics({ workspaceId }: { workspaceId: string }) 
     let total = 0;
     for (const t of tasks) {
       total += 1;
-      const status = (t.status ?? "todo") as string;
+      const status = normalizeStatus(t.status);
       if (userId && t.assigneeId === userId) assignedToYou += 1;
       if (status === "done") completed += 1;
       if (t.dueDate && new Date(String(t.dueDate)).getTime() < now && status !== "done") overdue += 1;
@@ -149,19 +150,19 @@ export default function HomeAnalytics({ workspaceId }: { workspaceId: string }) 
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-1 space-y-4">
-          <button onClick={() => setFilter((f) => (f === "assigned" ? "priority" : "assigned"))} className={`w-full text-left p-4 border border-neutral-100 rounded-lg shadow-sm ${filter === "assigned" ? "bg-white" : "bg-slate-50"}`}>
+          <button aria-pressed={filter === "assigned"} onClick={() => setFilter((f) => (f === "assigned" ? "priority" : "assigned"))} className={`w-full text-left p-4 border border-neutral-100 rounded-lg shadow-sm ${filter === "assigned" ? "bg-white" : "bg-slate-50"}`}>
             <h3 className="text-sm text-muted-foreground">Assigned to you</h3>
             <div className="text-2xl font-semibold mt-2">{totals.assignedToYou}</div>
           </button>
-          <button onClick={() => setFilter((f) => (f === "completed" ? "priority" : "completed"))} className={`w-full text-left p-4 border border-neutral-100 rounded-lg shadow-sm ${filter === "completed" ? "bg-white" : "bg-slate-50"}`}>
+          <button aria-pressed={filter === "completed"} onClick={() => setFilter((f) => (f === "completed" ? "priority" : "completed"))} className={`w-full text-left p-4 border border-neutral-100 rounded-lg shadow-sm ${filter === "completed" ? "bg-white" : "bg-slate-50"}`}>
             <h3 className="text-sm text-muted-foreground">Completed</h3>
             <div className="text-2xl font-semibold mt-2">{totals.completed}</div>
           </button>
-          <button onClick={() => setFilter((f) => (f === "overdue" ? "priority" : "overdue"))} className={`w-full text-left p-4 border border-neutral-100 rounded-lg shadow-sm ${filter === "overdue" ? "bg-white" : "bg-slate-50"}`}>
+          <button aria-pressed={filter === "overdue"} onClick={() => setFilter((f) => (f === "overdue" ? "priority" : "overdue"))} className={`w-full text-left p-4 border border-neutral-100 rounded-lg shadow-sm ${filter === "overdue" ? "bg-white" : "bg-slate-50"}`}>
             <h3 className="text-sm text-muted-foreground">Overdue</h3>
             <div className="text-2xl font-semibold mt-2 text-red-600">{totals.overdue}</div>
           </button>
-          <button onClick={() => setFilter((f) => (f === "all" ? "priority" : "all"))} className={`w-full text-left p-4 border border-neutral-100 rounded-lg shadow-sm ${filter === "all" ? "bg-white" : "bg-slate-50"}`}>
+          <button aria-pressed={filter === "all"} onClick={() => setFilter((f) => (f === "all" ? "priority" : "all"))} className={`w-full text-left p-4 border border-neutral-100 rounded-lg shadow-sm ${filter === "all" ? "bg-white" : "bg-slate-50"}`}>
             <h3 className="text-sm text-muted-foreground">Total tasks</h3>
             <div className="text-2xl font-semibold mt-2">{totals.total}</div>
           </button>
