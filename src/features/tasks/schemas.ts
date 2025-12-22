@@ -14,6 +14,8 @@ export const createTaskSchema = z.object({
   assigneeId: z.string().min(1, "Assignee is required"),
   projectId: z.string().min(1, "Project is required"),
   workspaceId: z.string().min(1, "Workspace is required"),
+  // Optional ordering position for kanban ordering (client-side)
+  position: z.number().optional(),
 });
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;

@@ -18,6 +18,7 @@ import EditTaskForm from "./edit-task-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DottedSeparator } from "@/components/dotted-separator";
 import TaskRow from "./task-row";
+import DataKanban from "./data-kanban";
 import { useDeleteTask } from "@/features/tasks/api/use-delete-task";
 import { useConfirm } from "@/hooks/use-confirm";
 import { format, parseISO, isValid } from "date-fns";
@@ -211,74 +212,135 @@ export default function TasksPage() {
           <Input placeholder="Search title..." value={searchInput} onChange={(e) => setSearchInput(e.target.value)} className="max-w-xs" />
 
           <div className="flex items-center gap-2">
-            <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    {selectedStatus ? (selectedStatus === 'in-progress' || selectedStatus === 'inprogress' ? 'In progress' : selectedStatus === 'in-review' ? 'In review' : selectedStatus === 'todo' ? 'To do' : selectedStatus === 'backlog' ? 'Backlog' : 'Done') : 'All statuses'}
-                    <Badge className="ml-2">{selectedStatus ? (counts?.statuses?.[selectedStatus] ?? 0) : (Object.values(counts?.statuses ?? {}) as number[]).reduce((a,b)=>a+b,0)}</Badge>
-                  </Button>
-                </PopoverTrigger>
-              <PopoverContent className="w-56">
-                <div className="space-y-2">
-                  {[
-                    { id: "backlog", label: "Backlog" },
-                    { id: "todo", label: "To do" },
-                    { id: "in-progress", label: "In progress" },
-                    { id: "in-review", label: "In review" },
-                    { id: "done", label: "Done" },
-                  ].map((s) => (
-                    <div key={s.id} className={`flex items-center justify-between gap-2 px-2 py-1 hover:bg-neutral-50 rounded cursor-pointer ${selectedStatus === s.id ? 'bg-neutral-100' : ''}`} onClick={() => setSelectedStatus(selectedStatus === s.id ? undefined : s.id)}>
-                      <div className="text-sm">{s.label}</div>
-                      <div className="text-xs text-muted-foreground">{counts?.statuses?.[s.id] ?? 0}</div>
-                    </div>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm">{selectedAssignee ? (membersByUserId[selectedAssignee]?.name ?? membersByUserId[selectedAssignee]?.email ?? "Assignee") : "All assignees"} <Badge className="ml-2">{selectedAssignee ? (counts?.assignees?.[selectedAssignee] ?? 0) : (Object.values(counts?.assignees ?? {}) as number[]).reduce((a,b)=>a+b,0)}</Badge></Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64">
-                <div className="space-y-2">
-                  {(membersData?.documents ?? []).map((m: Member) => (
-                    <div key={m.$id} className="flex items-center justify-between gap-2 px-2 py-1 hover:bg-neutral-50 rounded cursor-pointer" onClick={() => setSelectedAssignee(selectedAssignee === m.userId ? undefined : m.userId)}>
-                      <div className="flex items-center gap-2">
-                        <MemberAvatar name={m.name ?? m.email ?? "?"} classname="size-4" />
-                        <div className="text-sm">{m.name ?? m.email}</div>
+            <div className="hidden md:flex items-center gap-2">
+              <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      {selectedStatus ? (selectedStatus === 'in-progress' || selectedStatus === 'inprogress' ? 'In progress' : selectedStatus === 'in-review' ? 'In review' : selectedStatus === 'todo' ? 'To do' : selectedStatus === 'backlog' ? 'Backlog' : 'Done') : 'All statuses'}
+                      <Badge className="ml-2">{selectedStatus ? (counts?.statuses?.[selectedStatus] ?? 0) : (Object.values(counts?.statuses ?? {}) as number[]).reduce((a,b)=>a+b,0)}</Badge>
+                    </Button>
+                  </PopoverTrigger>
+                <PopoverContent className="w-56">
+                  <div className="space-y-2">
+                    {[
+                      { id: "backlog", label: "Backlog" },
+                      { id: "todo", label: "To do" },
+                      { id: "in-progress", label: "In progress" },
+                      { id: "in-review", label: "In review" },
+                      { id: "done", label: "Done" },
+                    ].map((s) => (
+                      <div key={s.id} className={`flex items-center justify-between gap-2 px-2 py-1 hover:bg-neutral-50 rounded cursor-pointer ${selectedStatus === s.id ? 'bg-neutral-100' : ''}`} onClick={() => setSelectedStatus(selectedStatus === s.id ? undefined : s.id)}>
+                        <div className="text-sm">{s.label}</div>
+                        <div className="text-xs text-muted-foreground">{counts?.statuses?.[s.id] ?? 0}</div>
                       </div>
-                      <div className="text-xs text-muted-foreground">{counts?.assignees?.[m.userId] ?? 0}</div>
-                    </div>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
 
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm">{selectedProject ? (projects.find((x) => x.$id === selectedProject)?.name ?? "Project") : "All projects"} <Badge className="ml-2">{selectedProject ? (counts?.projects?.[selectedProject] ?? 0) : (Object.values(counts?.projects ?? {}) as number[]).reduce((a,b)=>a+b,0)}</Badge></Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64">
-                <div className="space-y-2">
-                  {(projectsData?.documents ?? []).map((p: Project) => (
-                    <div key={p.$id} className="flex items-center justify-between gap-2 px-2 py-1 hover:bg-neutral-50 rounded cursor-pointer" onClick={() => setSelectedProject(selectedProject === p.$id ? undefined : p.$id)}>
-                      <div className="text-sm">{p.name}</div>
-                      <div className="text-xs text-muted-foreground">{counts?.projects?.[p.$id] ?? 0}</div>
-                    </div>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">{selectedAssignee ? (membersByUserId[selectedAssignee]?.name ?? membersByUserId[selectedAssignee]?.email ?? "Assignee") : "All assignees"} <Badge className="ml-2">{selectedAssignee ? (counts?.assignees?.[selectedAssignee] ?? 0) : (Object.values(counts?.assignees ?? {}) as number[]).reduce((a,b)=>a+b,0)}</Badge></Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64">
+                  <div className="space-y-2">
+                    {(membersData?.documents ?? []).map((m: Member) => (
+                      <div key={m.$id} className="flex items-center justify-between gap-2 px-2 py-1 hover:bg-neutral-50 rounded cursor-pointer" onClick={() => setSelectedAssignee(selectedAssignee === m.userId ? undefined : m.userId)}>
+                        <div className="flex items-center gap-2">
+                          <MemberAvatar name={m.name ?? m.email ?? "?"} classname="size-4" />
+                          <div className="text-sm">{m.name ?? m.email}</div>
+                        </div>
+                        <div className="text-xs text-muted-foreground">{counts?.assignees?.[m.userId] ?? 0}</div>
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
 
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm">{selectedDueDate ? format(parseISO(selectedDueDate), "MMM d, yyyy") : 'Due date'}</Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={selectedDueDate ? new Date(selectedDueDate) : undefined} onSelect={(d) => setSelectedDueDate(d ? d.toISOString() : undefined)} />
-              </PopoverContent>
-            </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">{selectedProject ? (projects.find((x) => x.$id === selectedProject)?.name ?? "Project") : "All projects"} <Badge className="ml-2">{selectedProject ? (counts?.projects?.[selectedProject] ?? 0) : (Object.values(counts?.projects ?? {}) as number[]).reduce((a,b)=>a+b,0)}</Badge></Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64">
+                  <div className="space-y-2">
+                    {(projectsData?.documents ?? []).map((p: Project) => (
+                      <div key={p.$id} className="flex items-center justify-between gap-2 px-2 py-1 hover:bg-neutral-50 rounded cursor-pointer" onClick={() => setSelectedProject(selectedProject === p.$id ? undefined : p.$id)}>
+                        <div className="text-sm">{p.name}</div>
+                        <div className="text-xs text-muted-foreground">{counts?.projects?.[p.$id] ?? 0}</div>
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">{selectedDueDate ? format(parseISO(selectedDueDate), "MMM d, yyyy") : 'Due date'}</Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar mode="single" selected={selectedDueDate ? new Date(selectedDueDate) : undefined} onSelect={(d) => setSelectedDueDate(d ? d.toISOString() : undefined)} />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Mobile: single Filters popover */}
+            <div className="md:hidden">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">Filters</Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-72">
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-sm font-semibold mb-1">Status</div>
+                      <div className="space-y-1">
+                        {["backlog","todo","in-progress","in-review","done"].map((id) => {
+                          const label = id === 'backlog' ? 'Backlog' : id === 'todo' ? 'To do' : id === 'in-progress' ? 'In progress' : id === 'in-review' ? 'In review' : 'Done';
+                          return (
+                            <div key={id} className={`flex items-center justify-between gap-2 px-2 py-1 hover:bg-neutral-50 rounded cursor-pointer ${selectedStatus === id ? 'bg-neutral-100' : ''}`} onClick={() => setSelectedStatus(selectedStatus === id ? undefined : id)}>
+                              <div className="text-sm">{label}</div>
+                              <div className="text-xs text-muted-foreground">{counts?.statuses?.[id] ?? 0}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm font-semibold mb-1">Assignee</div>
+                      <div className="space-y-1 max-h-40 overflow-auto">
+                        {(membersData?.documents ?? []).map((m: Member) => (
+                          <div key={m.$id} className="flex items-center justify-between gap-2 px-2 py-1 hover:bg-neutral-50 rounded cursor-pointer" onClick={() => setSelectedAssignee(selectedAssignee === m.userId ? undefined : m.userId)}>
+                            <div className="flex items-center gap-2">
+                              <MemberAvatar name={m.name ?? m.email ?? "?"} classname="size-4" />
+                              <div className="text-sm">{m.name ?? m.email}</div>
+                            </div>
+                            <div className="text-xs text-muted-foreground">{counts?.assignees?.[m.userId] ?? 0}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm font-semibold mb-1">Project</div>
+                      <div className="space-y-1 max-h-40 overflow-auto">
+                        {(projectsData?.documents ?? []).map((p: Project) => (
+                          <div key={p.$id} className="flex items-center justify-between gap-2 px-2 py-1 hover:bg-neutral-50 rounded cursor-pointer" onClick={() => setSelectedProject(selectedProject === p.$id ? undefined : p.$id)}>
+                            <div className="text-sm">{p.name}</div>
+                            <div className="text-xs text-muted-foreground">{counts?.projects?.[p.$id] ?? 0}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-sm font-semibold mb-1">Due date</div>
+                      <Calendar mode="single" selected={selectedDueDate ? new Date(selectedDueDate) : undefined} onSelect={(d) => setSelectedDueDate(d ? d.toISOString() : undefined)} />
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
         </div>
         {/* Active filter chips */}
@@ -312,89 +374,80 @@ export default function TasksPage() {
         <div className="flex gap-6">
           <div className="flex-1">
             
-            <div className="p-4 bg-neutral-50 border border-neutral-200 rounded">
-              {/* Column headers */}
-              <div className="hidden md:flex items-center px-2 py-3 text-sm font-semibold text-muted-foreground border-b border-neutral-200">
-                <div className="flex-1">Task Name</div>
-                <div className="w-36">Project</div>
-                <div className="w-36">Assigned to</div>
-                <div className="w-40">Due date</div>
-                <div className="w-28">Status</div>
-                <div className="w-28">Priority</div>
-                <div className="w-16 text-right">Actions</div>
-              </div>
-              <div ref={listRef} className="h-[60vh] overflow-auto relative">
+            <div className="p-4 bg-neutral-50 border border-neutral-200 rounded relative">
+              {/* Column headers (only visible in table view) */}
               {view === "table" && (
-                <div className="space-y-3">
-                  {tasks.length === 0 && <div className="text-sm text-muted-foreground">No tasks</div>}
-                  {visible.map((t) => (
-                    <TaskRow
-                      key={t.$id}
-                      t={t}
-                      projectsById={projectsById}
-                      membersByUserId={membersByUserId}
-                      workspaceId={workspaceId}
-                      setEditingTask={setEditingTask}
-                      setIsEditOpen={setIsEditOpen}
-                      deleteMutation={deleteMutation}
-                      confirmDelete={confirmDelete}
-                      router={router}
-                    />
-                  ))}
-
-                  {/* Prev/Next controls (bottom-right) */}
-                  <div className="absolute bottom-3 right-3 flex items-center gap-2">
-                    <Button size="sm" variant="outline" disabled={pageIndex <= 0} onClick={() => setPageIndex((p) => Math.max(0, p - 1))} className={`${pageIndex <= 0 ? 'opacity-50 pointer-events-none' : ''}`}>
-                      Previous
-                    </Button>
-                    <Button size="sm" variant="outline" disabled={pageIndex >= totalPages - 1} onClick={() => setPageIndex((p) => Math.min(totalPages - 1, p + 1))} className={`${pageIndex >= totalPages - 1 ? 'opacity-50 pointer-events-none' : ''}`}>
-                      Next
-                    </Button>
-                  </div>
+                <div className="hidden md:flex items-center px-2 py-3 text-sm font-semibold text-muted-foreground border-b border-neutral-200">
+                  <div className="flex-1">Task Name</div>
+                  <div className="w-36">Project</div>
+                  <div className="w-36">Assigned to</div>
+                  <div className="w-40">Due date</div>
+                  <div className="w-28">Status</div>
+                  <div className="w-28">Priority</div>
+                  <div className="w-16 text-right">Actions</div>
                 </div>
               )}
-
-              {view === "kanban" && (
-                <div className="flex gap-4">
-                  {Object.entries(byStatus).map(([status, list]) => (
-                    <div key={status} className="flex-1 min-w-[220px]">
-                      <h3 className="text-sm font-semibold mb-2">{status.toUpperCase()}</h3>
-                      <div className="space-y-3 max-h-[52vh] overflow-auto">
-                        {list.map((t) => (
-                          <div key={t.$id} className="p-3 border border-neutral-200 rounded bg-white shadow-sm">
-                            <div className="font-medium">{t.title}</div>
-                            <div className="text-xs text-muted-foreground mt-1">Due: {t.dueDate ? format(parseISO(t.dueDate), "MMM d") : "—"}</div>
-                            <div className="text-xs text-muted-foreground mt-2">Assignee: {t.assigneeName ?? "—"}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {view === "calendar" && (
-                <div>
-                  <div className="max-h-[52vh] overflow-auto">
-                    <DayPicker
-                      mode="single"
-                      fromMonth={new Date()}
-                      modifiers={{ due: dueDates.map((d) => new Date(d.date)) }}
-                      modifiersClassNames={{ due: "bg-amber-200 rounded" }}
-                    />
-                  </div>
-
-                  <div className="mt-4 space-y-2">
-                    {dueDates.map((d) => (
-                      <div key={d.task.$id} className="p-3 border border-neutral-200 rounded bg-white">
-                        <div className="font-medium">{d.task.title}</div>
-                        <div className="text-xs text-muted-foreground">Due: {format(parseISO(d.date), "PPP")}</div>
-                      </div>
+              <div ref={listRef} className="h-[60vh] overflow-auto">
+                {view === "table" && (
+                  <div className="space-y-3">
+                    {tasks.length === 0 && <div className="text-sm text-muted-foreground">No tasks</div>}
+                    {visible.map((t) => (
+                      <TaskRow
+                        key={t.$id}
+                        t={t}
+                        projectsById={projectsById}
+                        membersByUserId={membersByUserId}
+                        workspaceId={workspaceId}
+                        setEditingTask={setEditingTask}
+                        setIsEditOpen={setIsEditOpen}
+                        deleteMutation={deleteMutation}
+                        confirmDelete={confirmDelete}
+                        router={router}
+                      />
                     ))}
                   </div>
+                )}
+
+                {view === "kanban" && (
+                  <div className="w-full">
+                    <DataKanban tasks={tasks} workspaceId={String(workspaceId)} projectsById={projectsById} membersByUserId={membersByUserId} />
+                  </div>
+                )}
+
+                {view === "calendar" && (
+                  <div>
+                    <div className="max-h-[52vh] overflow-auto">
+                      <DayPicker
+                        mode="single"
+                        fromMonth={new Date()}
+                        modifiers={{ due: dueDates.map((d) => new Date(d.date)) }}
+                        modifiersClassNames={{ due: "bg-amber-200 rounded" }}
+                      />
+                    </div>
+
+                    <div className="mt-4 space-y-2">
+                      {dueDates.map((d) => (
+                        <div key={d.task.$id} className="p-3 border border-neutral-200 rounded bg-white">
+                          <div className="font-medium">{d.task.title}</div>
+                          <div className="text-xs text-muted-foreground">Due: {format(parseISO(d.date), "PPP")}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Prev/Next controls anchored to the padded container so they stay at the end */}
+              {view === "table" && (
+                <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                  <Button size="sm" variant="outline" disabled={pageIndex <= 0} onClick={() => setPageIndex((p) => Math.max(0, p - 1))} className={`${pageIndex <= 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+                    Previous
+                  </Button>
+                  <Button size="sm" variant="outline" disabled={pageIndex >= totalPages - 1} onClick={() => setPageIndex((p) => Math.min(totalPages - 1, p + 1))} className={`${pageIndex >= totalPages - 1 ? 'opacity-50 pointer-events-none' : ''}`}>
+                    Next
+                  </Button>
                 </div>
               )}
-                  </div>
                 </div>
               </div>
         </div>
