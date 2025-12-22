@@ -1,12 +1,10 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { useRef } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { ImageIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-// useRouter removed: not used in this component
-import Image from "next/image";
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -72,6 +70,25 @@ export const CreateProjectForm = ({ onCancel }: CreateProjectFormProps) => {
     }
   }
 
+  const watchedImage = form.watch("image");
+
+  const previewUrl = useMemo(() => {
+    if (!watchedImage) return undefined;
+    if (watchedImage instanceof File) return URL.createObjectURL(watchedImage as File);
+    if (typeof watchedImage === "string") return watchedImage;
+    return undefined;
+  }, [watchedImage]);
+
+  useEffect(() => {
+    let url: string | undefined;
+    if (watchedImage instanceof File) {
+      url = URL.createObjectURL(watchedImage as File);
+    }
+    return () => {
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [watchedImage]);
+
   return (
     <Card className="w-full h-full border-none shadow-none">
       <CardHeader className="flex p-7">
@@ -108,17 +125,13 @@ export const CreateProjectForm = ({ onCancel }: CreateProjectFormProps) => {
                 render={({ field }) => (
                   <div className="flex flex-col gap-y-2">
                     <div className="flex items-center gap-x-5">
-                      {field.value ? (
+                      {previewUrl ? (
                         <div className="size-[72px] relative rounded-md overflow-hidden">
-                          <Image 
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
                             alt="Logo"
-                            fill
-                            className="object-cover"
-                            src={
-                              field.value instanceof File
-                              ? URL.createObjectURL(field.value)
-                              : field.value
-                            }
+                            src={previewUrl}
+                            className="object-cover w-full h-full"
                           />
                         </div>
                       ) : (

@@ -26,6 +26,7 @@ app
 export const GET = handle(app);
 // defining the POST route for the application
 export const POST = handle(app);
+export const PUT = handle(app);
 export const PATCH = handle(app);
 export const DELETE = handle(app);
 

@@ -104,4 +104,73 @@ const app = new Hono()
     }
   );
 
+// add update and delete endpoints for projects
+app
+  .patch(
+    "/:projectId",
+    sessionMiddleware,
+    zValidator("form", createProjectSchema.partial().omit({ workspaceId: true })),
+    async (c) => {
+      const databases = c.get("databases");
+      const storage = c.get("storage");
+      const user = c.get("user");
+
+      const { projectId } = c.req.param();
+
+      // check membership by querying project and workspace
+      const project = await databases.getDocument(DATABASE_ID, PROJECTS_ID, projectId).catch(() => null);
+      if (!project) return c.json({ error: "Not found" }, 404);
+
+      const member = await getMember({ databases, workspaceId: project.workspaceId, userId: user.$id });
+      if (!member) return c.json({ error: "Unauthorized" }, 401);
+
+      const { name, image } = c.req.valid("form");
+
+      const updateData: Record<string, unknown> = {};
+      if (typeof name !== "undefined") updateData.name = name;
+
+      let uploadedImageUrl: string | undefined;
+
+      if (image instanceof File) {
+        const file = await storage.createFile(
+          IMAGES_BUCKET_ID,
+          ID.unique(),
+          image,
+        );
+
+        const endpoint = APPW_ENDPOINT.replace(/\/v1$/, "");
+        uploadedImageUrl = `${endpoint}/v1/storage/buckets/${IMAGES_BUCKET_ID}/files/${file.$id}/view?project=${APPW_PROJECT_ID}&mode=admin`;
+
+        updateData.imageUrl = uploadedImageUrl;
+      } else if (typeof image === "string") {
+        updateData.imageUrl = image === "" ? undefined : image;
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        return c.json({ error: "No update data provided" }, 400);
+      }
+
+      const updated = await databases.updateDocument(DATABASE_ID, PROJECTS_ID, projectId, updateData);
+      return c.json({ data: updated });
+    }
+  )
+  .delete(
+    "/:projectId",
+    sessionMiddleware,
+    async (c) => {
+      const databases = c.get("databases");
+      const user = c.get("user");
+      const { projectId } = c.req.param();
+
+      const project = await databases.getDocument(DATABASE_ID, PROJECTS_ID, projectId).catch(() => null);
+      if (!project) return c.json({ error: "Not found" }, 404);
+
+      const member = await getMember({ databases, workspaceId: project.workspaceId, userId: user.$id });
+      if (!member) return c.json({ error: "Unauthorized" }, 401);
+
+      await databases.deleteDocument(DATABASE_ID, PROJECTS_ID, projectId);
+      return c.json({ data: { ok: true } });
+    }
+  );
+
 export default app;

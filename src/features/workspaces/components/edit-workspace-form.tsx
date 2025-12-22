@@ -7,7 +7,6 @@ import { ImageIcon, ArrowLeftIcon, CopyIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -175,15 +174,15 @@ export const EditWorkspaceForm = ({ onCancel, initialValues }: EditWorkspaceForm
                       <div className="flex items-center gap-x-5">
                         {field.value ? (
                           <div className="size-[72px] relative rounded-md overflow-hidden">
-                            <Image 
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
                               alt="Logo"
-                              fill
-                              className="object-cover"
                               src={
                                 field.value instanceof File
-                                ? URL.createObjectURL(field.value)
-                                : field.value
+                                  ? URL.createObjectURL(field.value)
+                                  : (field.value as string)
                               }
+                              className="object-cover w-full h-full"
                             />
                           </div>
                         ) : (

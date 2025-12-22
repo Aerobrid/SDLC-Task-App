@@ -30,6 +30,15 @@ import {
   DropdownMenuItem
 } from "@/components/ui/dropdown-menu"
 
+interface MemberDoc {
+  $id: string;
+  userId?: string;
+  workspaceId?: string;
+  role?: MemberRole;
+  name?: string;
+  email?: string;
+}
+
 export const MembersList = () => {
   const workspaceId = useWorkspaceId();
   const [ConfirmDialog, confirm] = useConfirm(
@@ -84,15 +93,14 @@ export const MembersList = () => {
         <DottedSeparator />
       </div>
       <CardContent className="p-7">
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        {data?.documents.map((member: any, index: number) => (
+        {data?.documents.map((member: MemberDoc, index: number) => (
           <Fragment key={member.$id}>
             {/* Render member details here */}
             <div className="flex items-center gap-2">
               <MemberAvatar 
                 classname="size-10"
                 fallbackClassname="text-lg"
-                name={member.name}
+                name={member.name ?? member.email ?? "Member"}
               />
               <div className="flex flex-col">
                 <p className="text-sm font-medium">{member.name}</p>

@@ -14,11 +14,11 @@ export const useConfirm = (
   title: string,
   message: string,
   variant: ButtonProps["variant"] = "primary",
-): [() => JSX.Element, () => Promise<unknown>] => {
+): [() => JSX.Element, () => Promise<boolean>] => {
   const [promise, setPromise] = useState<{ resolve: (value: boolean) => void } | null>(null);
 
-  const confirm = () => {
-    return new Promise((resolve) => {
+  const confirm = (): Promise<boolean> => {
+    return new Promise<boolean>((resolve) => {
       setPromise({ resolve });
     });
   };
