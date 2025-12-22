@@ -251,9 +251,11 @@ app.put(
 
     type PartialTask = Partial<z.infer<typeof createTaskSchema>>;
     const payload = c.req.valid("json") as PartialTask;
-    // debug log for incoming update payloads
-    // eslint-disable-next-line no-console
-    console.log("PUT /api/tasks/:id payload:", { id, payload });
+    // debug log for incoming update payloads (dev-only)
+    if (process.env.NODE_ENV !== "production") {
+      // eslint-disable-next-line no-console
+      console.log("PUT /api/tasks/:id payload:", { id, payload });
+    }
     const url = new URL(c.req.url);
     const workspaceId = (payload.workspaceId as string) ?? url.searchParams.get("workspaceId");
     if (!workspaceId) return c.json({ error: "workspaceId required" }, 400);
@@ -276,9 +278,11 @@ app.put(
 
     // If there are no fields to update, return a helpful error instead of calling Appwrite with an empty body
     if (Object.keys(updateData).length === 0) {
-      // Log payload for debugging
-      // eslint-disable-next-line no-console
-      console.error("update task called with empty payload", { payload });
+      // Log payload for debugging (dev-only)
+      if (process.env.NODE_ENV !== "production") {
+        // eslint-disable-next-line no-console
+        console.error("update task called with empty payload", { payload });
+      }
       return c.json({ error: "No update fields provided", payload }, 400);
     }
 
@@ -287,9 +291,11 @@ app.put(
       return c.json({ data: updated });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      // log error for debugging
-      // eslint-disable-next-line no-console
-      console.error("updateDocument error:", msg);
+      // log error for debugging (dev-only)
+      if (process.env.NODE_ENV !== "production") {
+        // eslint-disable-next-line no-console
+        console.error("updateDocument error:", msg);
+      }
       // If Appwrite complains about unknown attribute (collection schema missing `position`), return 400 with actionable message
       if (String(msg).toLowerCase().includes("unknown attribute")) {
         return c.json({ error: "Invalid update field", details: "Appwrite collection does not have the 'position' attribute. Add a numeric 'position' attribute to the tasks collection to persist ordering." }, 400);
