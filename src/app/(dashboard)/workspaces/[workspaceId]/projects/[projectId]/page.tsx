@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { ResponsiveModel } from "@/components/responsive-model";
 import { EditProjectForm } from "@/features/projects/components/edit-project-form";
 import { ImageIcon } from "lucide-react";
@@ -101,6 +101,9 @@ export default function ProjectPage({ params }: { params: { workspaceId: string;
   // view state: table | kanban | calendar
   const [view, setView] = useState<"table" | "kanban" | "calendar">("table");
 
+  // filter for metrics: all | assigned | completed | overdue
+  const [filter, setFilter] = useState<"all" | "assigned" | "completed" | "overdue">("all");
+
   // create task modal
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -108,6 +111,43 @@ export default function ProjectPage({ params }: { params: { workspaceId: string;
 
   const deleteMutation = useDeleteTask();
   const [ConfirmDialog, confirmDelete] = useConfirm("Delete task", "Are you sure you want to delete this task? This action cannot be undone.");
+
+  // Pagination for table view
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(6);
+
+  useEffect(() => {
+    const compute = () => {
+      const container = listRef.current;
+      if (!container) return;
+      const itemHeight = 72;
+      const available = Math.max(120, container.clientHeight);
+      const size = Math.max(1, Math.floor(available / itemHeight));
+      setPageSize(size);
+    };
+    compute();
+    window.addEventListener("resize", compute);
+    return () => window.removeEventListener("resize", compute);
+  }, []);
+
+  // derive filtered tasks based on selected metric
+  const filteredTasks = useMemo(() => {
+    if (filter === "all") return safeTasks;
+    if (filter === "assigned") return safeTasks.filter((t) => String(t.assigneeId) === String(userId));
+    if (filter === "completed") return safeTasks.filter((t) => String(t.status) === "done");
+    if (filter === "overdue") return safeTasks.filter((t) => t.dueDate && new Date(String(t.dueDate)).getTime() < Date.now() && String(t.status) !== "done");
+    return safeTasks;
+  }, [safeTasks, filter, userId]);
+
+  useEffect(() => setPageIndex(0), [filteredTasks.length]);
+  const totalPages = Math.max(1, Math.ceil(filteredTasks.length / pageSize));
+  useEffect(() => { if (pageIndex > totalPages - 1) setPageIndex(totalPages - 1); }, [totalPages, pageIndex]);
+  const visible = useMemo(() => {
+    const idx = Math.min(pageIndex, Math.max(0, totalPages - 1));
+    const start = idx * pageSize;
+    return filteredTasks.slice(start, start + pageSize);
+  }, [filteredTasks, pageIndex, pageSize, totalPages]);
 
   return (
     <>
@@ -128,18 +168,32 @@ export default function ProjectPage({ params }: { params: { workspaceId: string;
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1 space-y-4">
-            <div className="p-4 bg-slate-50 border border-neutral-100 rounded-lg shadow-sm">
+            <button
+              type="button"
+              aria-pressed={filter === "assigned"}
+              onClick={() => setFilter((f) => (f === "assigned" ? "all" : "assigned"))}
+              className={`w-full text-left p-4 border rounded-lg ${filter === "assigned" ? "bg-white border-neutral-200 shadow-sm" : "bg-slate-50 border-neutral-100 shadow-sm"}`}>
               <h3 className="text-sm text-muted-foreground">Assigned to you</h3>
               <div className="text-2xl font-semibold mt-2">{totals.assigned}</div>
-            </div>
-            <div className="p-4 bg-slate-50 border border-neutral-100 rounded-lg shadow-sm">
+            </button>
+
+            <button
+              type="button"
+              aria-pressed={filter === "completed"}
+              onClick={() => setFilter((f) => (f === "completed" ? "all" : "completed"))}
+              className={`w-full text-left p-4 border rounded-lg ${filter === "completed" ? "bg-white border-neutral-200 shadow-sm" : "bg-slate-50 border-neutral-100 shadow-sm"}`}>
               <h3 className="text-sm text-muted-foreground">Completed</h3>
               <div className="text-2xl font-semibold mt-2">{totals.completed}</div>
-            </div>
-            <div className="p-4 bg-slate-50 border border-neutral-100 rounded-lg shadow-sm">
+            </button>
+
+            <button
+              type="button"
+              aria-pressed={filter === "overdue"}
+              onClick={() => setFilter((f) => (f === "overdue" ? "all" : "overdue"))}
+              className={`w-full text-left p-4 border rounded-lg ${filter === "overdue" ? "bg-white border-neutral-200 shadow-sm" : "bg-slate-50 border-neutral-100 shadow-sm"}`}>
               <h3 className="text-sm text-muted-foreground">Overdue</h3>
               <div className="text-2xl font-semibold mt-2 text-red-600">{totals.overdue}</div>
-            </div>
+            </button>
           </div>
 
           <div className="lg:col-span-3">
@@ -151,7 +205,7 @@ export default function ProjectPage({ params }: { params: { workspaceId: string;
               </div>
             </div>
 
-            <div className="p-4 bg-slate-50 border border-neutral-100 rounded-lg">
+            <div className="p-4 bg-slate-50 border border-neutral-100 rounded-lg relative">
               {isLoading ? (
                 <div>Loading...</div>
               ) : view === "table" ? (
@@ -167,9 +221,19 @@ export default function ProjectPage({ params }: { params: { workspaceId: string;
                     <div className="w-12 text-right">Actions</div>
                   </div>
 
-                  {safeTasks.map((t) => (
-                    <TaskRow key={t.$id} t={t} projectsById={projectsFullMap} membersByUserId={membersByUserId} workspaceId={workspaceId} setEditingTask={() => {}} setIsEditOpen={() => {}} deleteMutation={deleteMutation} confirmDelete={confirmDelete} router={{ push: (u: string) => window.location.assign(u) }} />
-                  ))}
+                  <div ref={listRef} className="space-y-3 h-[360px] overflow-auto">
+                    {visible.map((t) => (
+                      <TaskRow key={t.$id} t={t} projectsById={projectsFullMap} membersByUserId={membersByUserId} workspaceId={workspaceId} setEditingTask={() => {}} setIsEditOpen={() => {}} deleteMutation={deleteMutation} confirmDelete={confirmDelete} router={{ push: (u: string) => window.location.assign(u) }} />
+                    ))}
+                  </div>
+                  <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                    <Button size="sm" variant="outline" disabled={pageIndex <= 0} onClick={() => setPageIndex((p) => Math.max(0, p - 1))} className={`${pageIndex <= 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+                      Previous
+                    </Button>
+                    <Button size="sm" variant="outline" disabled={pageIndex >= totalPages - 1} onClick={() => setPageIndex((p) => Math.min(totalPages - 1, p + 1))} className={`${pageIndex >= totalPages - 1 ? 'opacity-50 pointer-events-none' : ''}`}>
+                      Next
+                    </Button>
+                  </div>
                 </div>
               ) : view === "kanban" ? (
                 <div>
