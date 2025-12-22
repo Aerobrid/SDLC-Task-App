@@ -1,29 +1,47 @@
 "use client";
 
 import React from "react";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { Card } from "@/components/ui/card";
 import { KanbanColumnHeader } from "./kanban-column-header";
-import { useUpdateTask } from "@/features/tasks/api/use-update-task";
 import { useReorderTasks } from "@/features/tasks/api/use-reorder-tasks";
-import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-type Task = any;
+type Task = {
+  $id: string;
+  title: string;
+  projectId?: string;
+  assigneeId?: string;
+  assigneeName?: string;
+  status?: string;
+  priority?: string;
+  dueDate?: string;
+};
 
 const STATUS_ORDER = ["backlog", "todo", "in-progress", "in-review", "done"];
 
 type Props = {
   tasks: Task[];
   workspaceId: string;
-  projectsById?: Record<string, any>;
-  membersByUserId?: Record<string, any>;
+  projectsById?: Record<string, { name?: string }>;
+  membersByUserId?: Record<string, { name?: string; email?: string }>;
+};
+
+// Local narrow types for DnD provided objects to avoid using `any` and satisfy eslint
+type DroppableProvidedLocal = {
+  innerRef: (el: HTMLElement | null) => void;
+  droppableProps: Record<string, unknown>;
+  placeholder?: React.ReactNode;
+};
+
+type DraggableProvidedLocal = {
+  innerRef: (el: HTMLElement | null) => void;
+  draggableProps: Record<string, unknown>;
+  dragHandleProps?: Record<string, unknown>;
 };
 
 const DataKanban = ({ tasks, workspaceId, projectsById = {}, membersByUserId = {} }: Props) => {
-  const update = useUpdateTask();
   const reorder = useReorderTasks();
-  const qc = useQueryClient();
   const prevBoardRef = React.useRef<Record<string, Task[]>>({});
 
   // Local board state for optimistic UI and reordering
@@ -51,8 +69,8 @@ const DataKanban = ({ tasks, workspaceId, projectsById = {}, membersByUserId = {
     setBoard(next);
   }, [tasks]);
 
-  const onDragEnd = async (res: any) => {
-    const { source, destination, draggableId } = res as any;
+  const onDragEnd = async (res: DropResult) => {
+    const { source, destination } = res;
     if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
     const from = source.droppableId;
@@ -75,7 +93,7 @@ const DataKanban = ({ tasks, workspaceId, projectsById = {}, membersByUserId = {
       setBoard(next);
 
       // build updates for the entire column so ordering persists (server will write positions)
-      const updates: Array<Record<string, unknown>> = (next[from] ?? []).map((t: Task, idx: number) => ({ id: t.$id, status: from, position: idx }));
+      const updates: Array<{ id: string; status: string; position: number }> = (next[from] ?? []).map((t: Task, idx: number) => ({ id: t.$id, status: from, position: idx }));
 
       // Optimistically applied; persist batch changes and rollback on error
       reorder.mutate(
@@ -97,7 +115,7 @@ const DataKanban = ({ tasks, workspaceId, projectsById = {}, membersByUserId = {
     setBoard(next);
 
     // build updates for both affected columns
-    const updates: Array<Record<string, unknown>> = [];
+    const updates: Array<{ id: string; status: string; position: number }> = [];
     const fromList = next[from] ?? [];
     for (let idx = 0; idx < fromList.length; idx++) {
       const t = fromList[idx];
@@ -120,41 +138,41 @@ const DataKanban = ({ tasks, workspaceId, projectsById = {}, membersByUserId = {
       return (
         <>
           <div className="font-medium">{t.title}</div>
-          <div className="text-xs text-muted-foreground mt-1">{t.projectId ? (projectsById[t.projectId]?.name ?? 'Project') : '—'}</div>
-          <div className="text-xs text-muted-foreground mt-2">{t.assigneeName ?? (membersByUserId[t.assigneeId]?.name ?? '—')}</div>
+          <div className="text-xs text-muted-foreground mt-1">{t.projectId ? (projectsById[t.projectId]?.name ?? "Project") : "—"}</div>
+          <div className="text-xs text-muted-foreground mt-2">{t.assigneeName ?? (t.assigneeId ? (membersByUserId[t.assigneeId]?.name ?? "—") : "—")}</div>
         </>
       );
     });
   }, [projectsById, membersByUserId]);
 
   // Memoize column rendering to reduce recalculation
-  const columns = React.useMemo(() => {
+    const columns = React.useMemo(() => {
     return STATUS_ORDER.map((status) => (
       <div key={status} className="flex-1 min-w-[220px]">
         <Card className="h-full">
           <KanbanColumnHeader status={status} count={board[status]?.length ?? 0} />
           <div className="p-3">
             <Droppable droppableId={status}>
-              {(provided: any) => (
-                <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3 min-h-[100px]">
-                  {(board[status] ?? []).map((t: Task, index: number) => (
-                    <Draggable key={t.$id} draggableId={t.$id} index={index}>
-                      {(prov: any) => (
-                        <div ref={prov.innerRef} {...prov.draggableProps} {...prov.dragHandleProps} className="p-3 border border-neutral-200 rounded bg-white shadow-sm">
-                          <TaskCardContent t={t} />
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
+                {(provided: DroppableProvidedLocal) => (
+                  <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3 min-h-[100px]">
+                    {(board[status] ?? []).map((t: Task, index: number) => (
+                      <Draggable key={t.$id} draggableId={t.$id} index={index}>
+                        {(prov: DraggableProvidedLocal) => (
+                          <div ref={prov.innerRef} {...prov.draggableProps} {...prov.dragHandleProps} className="p-3 border border-neutral-200 rounded bg-white shadow-sm">
+                            <TaskCardContent t={t} />
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
             </Droppable>
           </div>
         </Card>
       </div>
     ));
-  }, [board, projectsById, membersByUserId]);
+  }, [board, TaskCardContent]);
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>

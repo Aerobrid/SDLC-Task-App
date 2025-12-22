@@ -16,10 +16,21 @@ import { useGetMembers } from "@/features/members/api/use-get-members";
 import { useGetProjects } from "@/features/projects/api/use-get-projects";
 import { useUpdateTask } from "@/features/tasks/api/use-update-task";
 
-type Props = { task: any; workspaceId: string; onSuccess?: () => void; onCancel?: () => void };
+type Task = {
+  $id: string;
+  title: string;
+  description?: string;
+  status?: string;
+  assigneeId?: string;
+  priority?: string;
+  projectId?: string;
+  dueDate?: string;
+};
+
+type Props = { task: Task; workspaceId: string; onSuccess?: () => void; onCancel?: () => void };
 
 export const EditTaskForm = ({ task, workspaceId, onSuccess, onCancel }: Props) => {
-  const createTaskInputSchema = createTaskSchema.omit({ workspaceId: true });
+  const createTaskInputSchema = createTaskSchema.omit({ workspaceId: true }).partial();
   const { data: membersData } = useGetMembers({ workspaceId });
   const { data: projectsData } = useGetProjects({ workspaceId });
 
@@ -28,14 +39,16 @@ export const EditTaskForm = ({ task, workspaceId, onSuccess, onCancel }: Props) 
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(task?.dueDate ? new Date(task.dueDate) : undefined);
 
-  const form = useForm<z.infer<typeof createTaskInputSchema> & { priority?: string; dueDate?: string }>({
+  type CreateInput = z.infer<typeof createTaskInputSchema>;
+
+  const form = useForm<CreateInput>({
     resolver: zodResolver(createTaskInputSchema),
     defaultValues: {
       title: task?.title ?? "",
       description: task?.description ?? "",
-      status: (task?.status ?? "todo") as any,
+      status: (task?.status ?? "todo") as CreateInput["status"],
       assigneeId: task?.assigneeId ?? "",
-      priority: task?.priority ?? "medium",
+      priority: (task?.priority as CreateInput["priority"]) ?? "medium",
       projectId: task?.projectId ?? "",
       dueDate: task?.dueDate ?? undefined,
     },
@@ -45,18 +58,18 @@ export const EditTaskForm = ({ task, workspaceId, onSuccess, onCancel }: Props) 
     form.reset({
       title: task?.title ?? "",
       description: task?.description ?? "",
-      status: (task?.status ?? "todo") as any,
+      status: (task?.status ?? "todo") as CreateInput["status"],
       assigneeId: task?.assigneeId ?? "",
-      priority: task?.priority ?? "medium",
+      priority: (task?.priority as CreateInput["priority"]) ?? "medium",
       projectId: task?.projectId ?? "",
       dueDate: task?.dueDate ?? undefined,
     });
     setSelectedDate(task?.dueDate ? new Date(task.dueDate) : undefined);
-  }, [task]);
+  }, [task, form]);
 
   const update = useUpdateTask();
 
-  const onSubmit = (values: any) => {
+  const onSubmit = (values: CreateInput) => {
     const date = selectedDate ?? (values.dueDate ? new Date(values.dueDate) : undefined);
 
     const final = {

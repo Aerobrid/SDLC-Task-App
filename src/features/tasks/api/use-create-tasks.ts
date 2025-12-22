@@ -1,17 +1,15 @@
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { InferRequestType, InferResponseType } from "hono";
 import { client } from "@/lib/rpc";
 import { CreateTaskInput } from "../schemas";
 
-type ResponseType = InferResponseType<typeof client.api.tasks["$post"], 200>;
-type RequestType = InferRequestType<typeof client.api.tasks["$post"]>;
+type RequestType = { form: CreateTaskInput };
 
 export const useCreateTask = () => {
   const queryClient = useQueryClient();
 
-  const mutation = useMutation<any, Error, any>({
-    mutationFn: async ({ form }: any) => {
+  const mutation = useMutation<unknown, Error, RequestType>({
+    mutationFn: async ({ form }: RequestType) => {
       const response = await client.api.tasks["$post"]({ form });
 
       if (!response.ok) {

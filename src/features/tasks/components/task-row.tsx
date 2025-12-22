@@ -1,50 +1,40 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
 import { parseISO, isValid, format } from "date-fns";
 import TaskActions from "./task-actions";
 
-type Task = any;
+type Task = {
+  $id: string;
+  title: string;
+  description?: string;
+  status?: string;
+  dueDate?: string;
+  assigneeId?: string;
+  projectId?: string;
+  priority?: string;
+};
+
+type ProjectDoc = { $id: string; name?: string };
+type MemberDoc = { $id: string; userId: string; name?: string; email?: string };
 
 type Props = {
   t: Task;
-  projectsById: Record<string, any>;
-  membersByUserId: Record<string, any>;
+  projectsById: Record<string, ProjectDoc>;
+  membersByUserId: Record<string, MemberDoc>;
   workspaceId: string | number;
-  setEditingTask: (t: Task) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setEditingTask: React.Dispatch<React.SetStateAction<any | null>>;
   setIsEditOpen: (v: boolean) => void;
-  deleteMutation: any;
+  deleteMutation: { mutate: (args: { id: string; workspaceId: string }) => void };
   confirmDelete: () => Promise<boolean>;
-  router: any;
+  router: { push: (url: string) => void };
 };
 
 export const TaskRow = ({ t, projectsById, membersByUserId, workspaceId, setEditingTask, setIsEditOpen, deleteMutation, confirmDelete, router }: Props) => {
-  const formattedDue = useMemo(() => {
-    try {
-      return t.dueDate && isValid(parseISO(t.dueDate)) ? format(parseISO(t.dueDate), "MMM d, yyyy") : "—";
-    } catch {
-      return "—";
-    }
-  }, [t.dueDate]);
-
-  const badge = useMemo(() => {
-    const s = (t.status ?? 'todo') as string;
-    const label = s === 'in-progress' || s === 'inprogress' ? 'In progress' : s === 'in-review' ? 'In review' : s === 'backlog' ? 'Backlog' : s === 'done' ? 'Done' : 'To do';
-    const cls = s === 'backlog'
-      ? 'bg-violet-100 text-violet-800 border-violet-200'
-      : s === 'todo'
-      ? 'bg-neutral-100 text-neutral-800 border-neutral-200'
-      : (s === 'in-progress' || s === 'inprogress')
-      ? 'bg-sky-100 text-sky-800 border-sky-200'
-      : s === 'in-review'
-      ? 'bg-teal-100 text-teal-800 border-teal-200'
-      : s === 'done'
-      ? 'bg-indigo-100 text-indigo-800 border-indigo-200'
-      : 'bg-neutral-100 text-neutral-800 border-neutral-200';
-    return { label, cls };
-  }, [t.status]);
+  // compute display values inline where used to keep code simple and avoid unused-var warnings
 
   return (
     <div className="border border-neutral-200 rounded bg-white">

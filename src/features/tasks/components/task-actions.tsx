@@ -10,14 +10,28 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Trash, Edit2, ExternalLink } from "lucide-react";
 
+type Task = {
+  $id: string;
+  title: string;
+  projectId?: string;
+  assigneeId?: string;
+  status?: string;
+  priority?: string;
+  dueDate?: string;
+};
+
+type DeleteMutation = { mutate: (args: { id: string; workspaceId: string }) => void };
+
+type RouterLike = { push: (url: string) => void };
+
 type Props = {
-  t: any;
+  t: Task;
   workspaceId: string;
-  setEditingTask: (t: any) => void;
+  setEditingTask: (t: Task) => void;
   setIsEditOpen: (v: boolean) => void;
-  deleteMutation: any;
+  deleteMutation: DeleteMutation;
   confirmDelete: () => Promise<boolean>;
-  router: any;
+  router: RouterLike;
 };
 
 export const TaskActions = ({ t, workspaceId, setEditingTask, setIsEditOpen, deleteMutation, confirmDelete, router }: Props) => {

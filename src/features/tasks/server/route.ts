@@ -52,9 +52,15 @@ app.post(
     if (dueDate) taskData.dueDate = dueDate;
     if (assigneeId) taskData.assigneeId = assigneeId;
     if (priority) taskData.priority = priority;
-    if ((c.req.valid as any) && (c.req.valid("form") as any).position !== undefined) {
-      const pos = (c.req.valid("form") as any).position;
-      taskData.position = pos;
+    // If the validator provided a `position` field include it
+    try {
+      const maybeForm = c.req.valid ? (c.req.valid("form") as unknown) : undefined;
+      if (maybeForm && typeof maybeForm === "object" && "position" in (maybeForm as Record<string, unknown>)) {
+        const pos = (maybeForm as Record<string, unknown>)["position"] as number | undefined;
+        if (typeof pos === "number") taskData.position = pos;
+      }
+    } catch {
+      // ignore
     }
 
     // assign default position if not provided: append to end of column for the given status
@@ -62,7 +68,7 @@ app.post(
       try {
         const q: string[] = [Query.equal("workspaceId", String(workspaceId)), Query.equal("status", String(normalizedStatus))];
         const res2 = await adminDatabases.listDocuments(DATABASE_ID, TASKS_ID, q);
-        const docs = (res2.documents ?? []) as any[];
+        const docs = (res2.documents ?? []) as Array<Record<string, unknown>>;
         let max = -1;
         for (const d of docs) {
           const p = typeof d.position === "number" ? d.position : null;
@@ -188,7 +194,10 @@ app.post("/reorder", sessionMiddleware, async (c) => {
       const id = String(u.id);
       const updateData: Record<string, unknown> = {};
       if (u.status !== undefined) updateData.status = String(u.status) === "inprogress" ? "in-progress" : u.status;
-      if ((u as any).position !== undefined) updateData.position = (u as any).position;
+      if (u && typeof u === "object" && "position" in (u as Record<string, unknown>)) {
+        const pos = (u as Record<string, unknown>)["position"] as number | undefined;
+        if (typeof pos === "number") updateData.position = pos;
+      }
 
       if (Object.keys(updateData).length === 0) {
         results.push({ id, ok: false, error: "No fields to update" });
@@ -203,7 +212,7 @@ app.post("/reorder", sessionMiddleware, async (c) => {
       if (String(msg).toLowerCase().includes("unknown attribute")) {
         return c.json({ error: "Invalid update field", details: "Appwrite collection does not have the 'position' attribute. Add a numeric 'position' attribute to the tasks collection to persist ordering." }, 400);
       }
-      results.push({ id: (u as any).id, ok: false, error: msg });
+      results.push({ id: (u as Record<string, unknown>).id as string, ok: false, error: msg });
     }
   }
 
@@ -274,7 +283,10 @@ app.put(
     if (payload.assigneeId !== undefined) updateData.assigneeId = payload.assigneeId;
     if (payload.priority !== undefined) updateData.priority = payload.priority;
     if (payload.projectId !== undefined) updateData.projectId = payload.projectId;
-    if ((payload as any).position !== undefined) updateData.position = (payload as any).position;
+    if (payload && typeof payload === "object" && "position" in (payload as Record<string, unknown>)) {
+      const pos = (payload as Record<string, unknown>)["position"] as number | undefined;
+      if (typeof pos === "number") updateData.position = pos;
+    }
 
     // If there are no fields to update, return a helpful error instead of calling Appwrite with an empty body
     if (Object.keys(updateData).length === 0) {
