@@ -61,8 +61,8 @@ export default function DataCalendar({ tasks, workspaceId, projectsById = {}, me
     const project = t.projectId ? projectsById[t.projectId]?.name ?? "Project" : "—";
     const assignee = t.assigneeName ?? (t.assigneeId ? membersByUserId[t.assigneeId]?.name ?? "—" : "—");
     return (
-      <div className="text-xs leading-tight">
-        <div className="font-medium">{t.title}</div>
+      <div className="text-xs leading-tight min-w-0">
+        <div className="font-medium truncate">{t.title}</div>
         <div className="truncate">{project} • {assignee}</div>
       </div>
     );

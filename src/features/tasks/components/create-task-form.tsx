@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { createTaskSchema } from "../schemas";
 import { useCreateTask } from "../api/use-create-tasks";
@@ -36,11 +36,12 @@ import {
 
 interface CreateTaskFormProps {
   projectId: string;
+  projectName?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export const CreateTaskForm = ({ projectId, onSuccess, onCancel }: CreateTaskFormProps) => {
+export const CreateTaskForm = ({ projectId, projectName, onSuccess, onCancel }: CreateTaskFormProps) => {
   const workspaceId = useWorkspaceId();
   const mutation = useCreateTask();
   const createTaskInputSchema = createTaskSchema.omit({ workspaceId: true });
@@ -57,6 +58,13 @@ export const CreateTaskForm = ({ projectId, onSuccess, onCancel }: CreateTaskFor
     resolver: zodResolver(createTaskInputSchema),
     defaultValues: { title: "", description: "", status: "todo", assigneeId: "", priority: "medium", dueDate: undefined },
   });
+
+  // If this form is rendered for a specific project, ensure the form value is set
+  useEffect(() => {
+    if (projectId) {
+      form.setValue("projectId", projectId as unknown as string);
+    }
+  }, [projectId, form]);
 
   const onSubmit = (values: z.infer<typeof createTaskInputSchema>) => {
     // Ensure a date is present (time is optional). If time is not provided, default to 00:00.
@@ -113,7 +121,7 @@ export const CreateTaskForm = ({ projectId, onSuccess, onCancel }: CreateTaskFor
           <FormItem>
             <FormLabel>Title</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="Task title" />
+              <Input {...field} placeholder="Task title" maxLength={50} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -125,7 +133,7 @@ export const CreateTaskForm = ({ projectId, onSuccess, onCancel }: CreateTaskFor
               <FormLabel>Project</FormLabel>
               <FormControl>
                 {projectId ? (
-                  <Input value={projectId} disabled />
+                  <Input value={projectName ?? projectId} disabled />
                 ) : (
                   <Select onValueChange={(v) => field.onChange(v)}>
                     <SelectTrigger>

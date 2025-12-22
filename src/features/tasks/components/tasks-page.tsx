@@ -375,20 +375,20 @@ export default function TasksPage() {
         <div className="flex gap-6">
           <div className="flex-1">
             
-            <div className="p-4 bg-neutral-50 border border-neutral-200 rounded relative">
+            <div className="p-4 bg-neutral-50 border border-neutral-200 rounded relative min-w-0">
               {/* Column headers (only visible in table view) */}
               {view === "table" && (
                 <div className="hidden md:flex items-center px-2 py-3 text-sm font-semibold text-muted-foreground border-b border-neutral-200">
                   <div className="flex-1">Task Name</div>
-                  <div className="w-36">Project</div>
-                  <div className="w-36">Assigned to</div>
-                  <div className="w-40">Due date</div>
-                  <div className="w-28">Status</div>
-                  <div className="w-28">Priority</div>
-                  <div className="w-16 text-right">Actions</div>
+                  <div className="w-28">Project</div>
+                  <div className="w-28">Assigned to</div>
+                  <div className="w-36">Due date</div>
+                  <div className="w-24">Status</div>
+                  <div className="w-20">Priority</div>
+                  <div className="w-12 text-right">Actions</div>
                 </div>
               )}
-              <div ref={listRef} className="h-[60vh] overflow-auto">
+              <div ref={listRef} className="h-[60vh] overflow-auto min-w-0">
                 {view === "table" && (
                   <div className="space-y-3">
                     {tasks.length === 0 && <div className="text-sm text-muted-foreground">No tasks</div>}

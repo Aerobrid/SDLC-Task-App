@@ -4,7 +4,7 @@ import { z } from "zod";
 // Required fields: title, status, priority, dueDate (ISO string), assigneeId, projectId, workspaceId
 // Optional: description
 export const createTaskSchema = z.object({
-  title: z.string().trim().min(1, "Title is required"),
+  title: z.string().trim().min(1, "Title is required").max(50, "Title must be at most 50 characters"),
   description: z.string().optional(),
   // Allowed statuses: backlog, todo, in-progress, in-review, done
   status: z.enum(["backlog", "todo", "in-progress", "in-review", "done"], { errorMap: () => ({ message: "Status is required" }) }),

@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { Context } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { ID, Query } from "node-appwrite";
 import { z } from "zod";
@@ -9,6 +10,21 @@ import { createTaskSchema } from "../schemas";
 import { DATABASE_ID, TASKS_ID } from "@/config";
 import { getMember } from "@/features/members/utils";
 
+// Small helpers to keep handlers concise and readable
+async function getAdminDatabases() {
+  const admin = await createAdminClient();
+  return admin.databases;
+}
+
+function normalizeStatus(s: unknown) {
+  const str = String(s ?? "");
+  return str === "inprogress" ? "in-progress" : str || "todo";
+}
+
+function sendError(c: Context, message: string, status = 400) {
+  return c.json({ error: message }, { status });
+}
+
 const app = new Hono();
 
 app.post(
@@ -17,29 +33,20 @@ app.post(
   zValidator("form", createTaskSchema),
   async (c) => {
     const databases = c.get("databases");
-    const admin = await createAdminClient();
-    const adminDatabases = admin.databases;
+    const adminDatabases = await getAdminDatabases();
     const user = c.get("user");
 
     const { title, description, status = "todo", dueDate, assigneeId, priority, projectId, workspaceId } = c.req.valid("form");
 
-    // Extra runtime checks to ensure required fields are present (defense-in-depth)
-    if (!status) return c.json({ error: "status is required" }, 400);
-    if (!priority) return c.json({ error: "priority is required" }, 400);
-    if (!assigneeId) return c.json({ error: "assigneeId is required" }, 400);
-    if (!projectId) return c.json({ error: "projectId is required" }, 400);
+    if (!status) return sendError(c, "status is required");
+    if (!priority) return sendError(c, "priority is required");
+    if (!assigneeId) return sendError(c, "assigneeId is required");
+    if (!projectId) return sendError(c, "projectId is required");
 
-    const member = await getMember({
-      databases,
-      workspaceId,
-      userId: user.$id,
-    });
+    const member = await getMember({ databases, workspaceId, userId: user.$id });
+    if (!member) return sendError(c, "Unauthorized", 401);
 
-    if (!member) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-
-    const normalizedStatus = String(status) === "inprogress" ? "in-progress" : String(status);
+    const normalizedStatus = normalizeStatus(status);
 
     const taskData: Record<string, unknown> = {
       title,
@@ -52,7 +59,7 @@ app.post(
     if (dueDate) taskData.dueDate = dueDate;
     if (assigneeId) taskData.assigneeId = assigneeId;
     if (priority) taskData.priority = priority;
-    // If the validator provided a `position` field include it
+
     try {
       const maybeForm = c.req.valid ? (c.req.valid("form") as unknown) : undefined;
       if (maybeForm && typeof maybeForm === "object" && "position" in (maybeForm as Record<string, unknown>)) {
@@ -60,10 +67,9 @@ app.post(
         if (typeof pos === "number") taskData.position = pos;
       }
     } catch {
-      // ignore
+      // ignore optional position
     }
 
-    // assign default position if not provided: append to end of column for the given status
     if (taskData.position === undefined) {
       try {
         const q: string[] = [Query.equal("workspaceId", String(workspaceId)), Query.equal("status", String(normalizedStatus))];
@@ -89,8 +95,7 @@ app.post(
 
 app.get("/", sessionMiddleware, async (c) => {
   const databases = c.get("databases");
-  const admin = await createAdminClient();
-  const adminDatabases = admin.databases;
+  const adminDatabases = await getAdminDatabases();
   const user = c.get("user");
 
   const url = new URL(c.req.url);
@@ -133,8 +138,7 @@ app.get("/", sessionMiddleware, async (c) => {
         if (p) queries.push(Query.equal("projectId", String(p)) as unknown as string);
         if (a) queries.push(Query.equal("assigneeId", String(a)) as unknown as string);
         if (s) {
-          const mapped = s === "inprogress" ? "in-progress" : s;
-          queries.push(Query.equal("status", mapped) as unknown as string);
+          queries.push(Query.equal("status", normalizeStatus(s)) as unknown as string);
         }
 
         const res = await adminDatabases.listDocuments(DATABASE_ID, TASKS_ID, queries);
@@ -178,8 +182,7 @@ app.post("/reorder", sessionMiddleware, async (c) => {
   if (!workspaceId) return c.json({ error: "workspaceId required" }, 400);
 
   const databases = c.get("databases");
-  const admin = await createAdminClient();
-  const adminDatabases = admin.databases;
+  const adminDatabases = await getAdminDatabases();
   const user = c.get("user");
 
   const member = await getMember({ databases, workspaceId: String(workspaceId), userId: user.$id });
@@ -193,7 +196,7 @@ app.post("/reorder", sessionMiddleware, async (c) => {
     try {
       const id = String(u.id);
       const updateData: Record<string, unknown> = {};
-      if (u.status !== undefined) updateData.status = String(u.status) === "inprogress" ? "in-progress" : u.status;
+      if (u.status !== undefined) updateData.status = normalizeStatus(u.status);
       if (u && typeof u === "object" && "position" in (u as Record<string, unknown>)) {
         const pos = (u as Record<string, unknown>)["position"] as number | undefined;
         if (typeof pos === "number") updateData.position = pos;
@@ -223,8 +226,7 @@ app.post("/reorder", sessionMiddleware, async (c) => {
 app.get("/:id", sessionMiddleware, async (c) => {
   const { id } = c.req.param();
   const databases = c.get("databases");
-  const admin = await createAdminClient();
-  const adminDatabases = admin.databases;
+  const adminDatabases = await getAdminDatabases();
   const user = c.get("user");
 
   if (!id) return c.json({ error: "id required" }, 400);
@@ -252,18 +254,15 @@ app.put(
   async (c) => {
     const { id } = c.req.param();
     const databases = c.get("databases");
-    const admin = await createAdminClient();
-    const adminDatabases = admin.databases;
+    const adminDatabases = await getAdminDatabases();
     const user = c.get("user");
 
     if (!id) return c.json({ error: "id required" }, 400);
 
     type PartialTask = Partial<z.infer<typeof createTaskSchema>>;
     const payload = c.req.valid("json") as PartialTask;
-    // debug log for incoming update payloads (dev-only)
     if (process.env.NODE_ENV !== "production") {
-      // eslint-disable-next-line no-console
-      console.log("PUT /api/tasks/:id payload:", { id, payload });
+      console.debug("tasks:update payload", { id, payload });
     }
     const url = new URL(c.req.url);
     const workspaceId = (payload.workspaceId as string) ?? url.searchParams.get("workspaceId");
@@ -276,8 +275,7 @@ app.put(
     if (payload.title !== undefined) updateData.title = payload.title;
     if (payload.description !== undefined) updateData.description = payload.description;
     if (payload.status !== undefined) {
-      const s = String(payload.status);
-      updateData.status = s === "inprogress" ? "in-progress" : payload.status;
+      updateData.status = normalizeStatus(payload.status);
     }
     if (payload.dueDate !== undefined) updateData.dueDate = payload.dueDate;
     if (payload.assigneeId !== undefined) updateData.assigneeId = payload.assigneeId;
@@ -303,10 +301,8 @@ app.put(
       return c.json({ data: updated });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      // log error for debugging (dev-only)
       if (process.env.NODE_ENV !== "production") {
-        // eslint-disable-next-line no-console
-        console.error("updateDocument error:", msg);
+        console.debug("tasks:update error", msg);
       }
       // If Appwrite complains about unknown attribute (collection schema missing `position`), return 400 with actionable message
       if (String(msg).toLowerCase().includes("unknown attribute")) {
@@ -320,8 +316,7 @@ app.put(
 app.delete("/:id", sessionMiddleware, async (c) => {
   const { id } = c.req.param();
   const databases = c.get("databases");
-  const admin = await createAdminClient();
-  const adminDatabases = admin.databases;
+  const adminDatabases = await getAdminDatabases();
   const user = c.get("user");
 
   if (!id) return c.json({ error: "id required" }, 400);

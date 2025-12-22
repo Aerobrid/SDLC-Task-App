@@ -136,12 +136,12 @@ const DataKanban = ({ tasks, workspaceId, projectsById = {}, membersByUserId = {
   const TaskCardContent = React.useMemo(() => {
     return React.memo(function TaskCardContent({ t }: { t: Task }) {
       return (
-        <>
-          <div className="font-medium">{t.title}</div>
-          <div className="text-xs text-muted-foreground mt-1">{t.projectId ? (projectsById[t.projectId]?.name ?? "Project") : "—"}</div>
-          <div className="text-xs text-muted-foreground mt-2">{t.assigneeName ?? (t.assigneeId ? (membersByUserId[t.assigneeId]?.name ?? "—") : "—")}</div>
-        </>
-      );
+          <div className="min-w-0">
+            <div className="font-medium truncate">{t.title}</div>
+            <div className="text-xs text-muted-foreground mt-1 truncate">{t.projectId ? (projectsById[t.projectId]?.name ?? "Project") : "—"}</div>
+            <div className="text-xs text-muted-foreground mt-2 truncate">{t.assigneeName ?? (t.assigneeId ? (membersByUserId[t.assigneeId]?.name ?? "—") : "—")}</div>
+          </div>
+        );
     });
   }, [projectsById, membersByUserId]);
 

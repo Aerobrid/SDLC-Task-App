@@ -37,23 +37,23 @@ export const TaskRow = ({ t, projectsById, membersByUserId, workspaceId, setEdit
   // compute display values inline where used to keep code simple and avoid unused-var warnings
 
   return (
-    <div className="border border-neutral-200 rounded bg-white">
+    <div className="border border-neutral-200 rounded bg-white min-w-0 overflow-hidden">
       {/* Desktop / wide: aligned columns */}
-      <div className="hidden md:flex items-center px-2 py-3 text-sm">
-        <div className="flex-1 font-medium">{t.title}</div>
-        <div className="w-36 text-sm text-muted-foreground">{t.projectId ? (projectsById[t.projectId]?.name ?? 'Project') : '—'}</div>
-        <div className="w-36 flex items-center gap-2">
+      <div className="hidden md:flex items-center px-2 py-3 text-sm min-w-0">
+        <div className="flex-1 font-medium truncate">{t.title}</div>
+        <div className="w-28 text-sm text-muted-foreground truncate">{t.projectId ? (projectsById[t.projectId]?.name ?? 'Project') : '—'}</div>
+        <div className="w-28 flex items-center gap-2">
           {t.assigneeId && membersByUserId[t.assigneeId] ? (
             <>
               <MemberAvatar name={membersByUserId[t.assigneeId].name ?? membersByUserId[t.assigneeId].email ?? "?"} classname="size-4" />
-              <div className="text-sm">{membersByUserId[t.assigneeId].name ?? membersByUserId[t.assigneeId].email}</div>
+              <div className="text-sm truncate">{membersByUserId[t.assigneeId].name ?? membersByUserId[t.assigneeId].email}</div>
             </>
           ) : (
             <div className="text-sm">—</div>
           )}
         </div>
-        <div className="w-40 text-sm text-muted-foreground">{t.dueDate && isValid(parseISO(t.dueDate)) ? format(parseISO(t.dueDate), "MMM d, yyyy") : "—"}</div>
-        <div className="w-28">
+        <div className="w-36 text-sm text-muted-foreground">{t.dueDate && isValid(parseISO(t.dueDate)) ? format(parseISO(t.dueDate), "MMM d, yyyy") : "—"}</div>
+        <div className="w-24">
           {(() => {
             const s = t.status ?? 'todo';
             const label = s === 'in-progress' || s === 'inprogress' ? 'In progress' : s === 'in-review' ? 'In review' : s === 'backlog' ? 'Backlog' : s === 'done' ? 'Done' : 'To do';
@@ -71,28 +71,28 @@ export const TaskRow = ({ t, projectsById, membersByUserId, workspaceId, setEdit
             return <Badge variant="outline" className={cls}>{label}</Badge>;
           })()}
         </div>
-        <div className="w-28">
+        <div className="w-20">
           {(() => {
             const p = (t.priority ?? 'medium');
             const cls = p === 'high' ? 'bg-red-100 text-red-800 border-red-200' : p === 'low' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-amber-100 text-amber-800 border-amber-200';
             return <Badge variant="outline" className={cls}>{p}</Badge>;
           })()}
         </div>
-        <div className="w-16 text-right">
+        <div className="w-12 text-right">
           <TaskActions t={t} workspaceId={String(workspaceId)} setEditingTask={setEditingTask} setIsEditOpen={setIsEditOpen} deleteMutation={deleteMutation} confirmDelete={confirmDelete} router={router} />
         </div>
       </div>
 
       {/* Mobile / stacked */}
       <div className="md:hidden p-3 flex flex-col gap-2">
-        <div className="font-medium">{t.title}</div>
+        <div className="font-medium truncate">{t.title}</div>
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div>{t.projectId ? (projectsById[t.projectId]?.name ?? 'Project') : '—'}</div>
+          <div className="truncate">{t.projectId ? (projectsById[t.projectId]?.name ?? 'Project') : '—'}</div>
           <div className="flex items-center gap-2">
             {t.assigneeId && membersByUserId[t.assigneeId] ? (
               <>
                 <MemberAvatar name={membersByUserId[t.assigneeId].name ?? membersByUserId[t.assigneeId].email ?? "?"} classname="size-4" />
-                <div className="text-sm">{membersByUserId[t.assigneeId].name ?? membersByUserId[t.assigneeId].email}</div>
+                <div className="text-sm truncate">{membersByUserId[t.assigneeId].name ?? membersByUserId[t.assigneeId].email}</div>
               </>
             ) : (
               <div className="text-sm">—</div>

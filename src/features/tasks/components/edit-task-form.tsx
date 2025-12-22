@@ -93,7 +93,7 @@ export const EditTaskForm = ({ task, workspaceId, onSuccess, onCancel }: Props) 
           <FormItem>
             <FormLabel>Title</FormLabel>
             <FormControl>
-              <Input {...field} />
+              <Input {...field} maxLength={50} />
             </FormControl>
             <FormMessage />
           </FormItem>
