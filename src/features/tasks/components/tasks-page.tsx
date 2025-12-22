@@ -23,6 +23,7 @@ import { useDeleteTask } from "@/features/tasks/api/use-delete-task";
 import { useConfirm } from "@/hooks/use-confirm";
 import { format, parseISO, isValid } from "date-fns";
 import { DayPicker } from "react-day-picker";
+import DataCalendar from "./data-calendar";
 import { Calendar } from "@/components/ui/calendar";
 
 type TaskStatus = "backlog" | "todo" | "inprogress" | "in-progress" | "in-review" | "done";
@@ -416,23 +417,7 @@ export default function TasksPage() {
 
                 {view === "calendar" && (
                   <div>
-                    <div className="max-h-[52vh] overflow-auto">
-                      <DayPicker
-                        mode="single"
-                        fromMonth={new Date()}
-                        modifiers={{ due: dueDates.map((d) => new Date(d.date)) }}
-                        modifiersClassNames={{ due: "bg-amber-200 rounded" }}
-                      />
-                    </div>
-
-                    <div className="mt-4 space-y-2">
-                      {dueDates.map((d) => (
-                        <div key={d.task.$id} className="p-3 border border-neutral-200 rounded bg-white">
-                          <div className="font-medium">{d.task.title}</div>
-                          <div className="text-xs text-muted-foreground">Due: {format(parseISO(d.date), "PPP")}</div>
-                        </div>
-                      ))}
-                    </div>
+                    <DataCalendar tasks={filteredTasks} workspaceId={String(workspaceId)} projectsById={projectsById} membersByUserId={membersByUserId} />
                   </div>
                 )}
               </div>
