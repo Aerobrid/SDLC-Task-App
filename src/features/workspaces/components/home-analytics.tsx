@@ -16,7 +16,8 @@ import { useDeleteTask } from "@/features/tasks/api/use-delete-task";
 import { useConfirm } from "@/hooks/use-confirm";
 
 type ProjectDoc = { $id: string; name?: string; imageUrl?: string; workspaceId?: string };
-type TaskDoc = { $id: string; title?: string; status?: string; dueDate?: string; projectId?: string; assigneeId?: string };
+type TaskDoc = { $id: string; title?: string; status?: string; dueDate?: string; projectId?: string; assigneeId?: string; priority?: string };
+type MemberDoc = { $id: string; userId: string; name?: string; email?: string };
 
 export default function HomeAnalytics({ workspaceId }: { workspaceId: string }) {
   const { data: projectsData } = useGetProjects({ workspaceId });
@@ -24,8 +25,8 @@ export default function HomeAnalytics({ workspaceId }: { workspaceId: string }) 
   const { data: membersData } = useGetMembers({ workspaceId });
   const { data: currentUser } = useCurrent();
 
-  const projects = (projectsData?.documents ?? []) as ProjectDoc[];
-  const tasks = (tasksResp?.data?.documents ?? []) as TaskDoc[];
+  const projects = useMemo(() => (projectsData?.documents ?? []) as ProjectDoc[], [projectsData?.documents]);
+  const tasks = useMemo(() => (tasksResp?.data?.documents ?? []) as TaskDoc[], [tasksResp?.data?.documents]);
 
   const userId = currentUser?.$id;
 
@@ -64,8 +65,8 @@ export default function HomeAnalytics({ workspaceId }: { workspaceId: string }) 
 
     // default or other filters: sort by priority then due date
     list.sort((a, b) => {
-      const pa = priorityRank((a as any).priority);
-      const pb = priorityRank((b as any).priority);
+      const pa = priorityRank(a.priority);
+      const pb = priorityRank(b.priority);
       if (pa !== pb) return pa - pb;
       const da = a.dueDate ? new Date(String(a.dueDate)).getTime() : Infinity;
       const db = b.dueDate ? new Date(String(b.dueDate)).getTime() : Infinity;
@@ -86,13 +87,10 @@ export default function HomeAnalytics({ workspaceId }: { workspaceId: string }) 
 
   const assigneeCounts = useMemo(() => {
     const map: Record<string, number> = {};
-    for (const m of (membersData?.documents ?? [])) map[m.userId] = 0;
+    for (const m of (membersData?.documents ?? []) as MemberDoc[]) map[m.userId] = 0;
     for (const t of tasks) if (t.assigneeId) map[t.assigneeId] = (map[t.assigneeId] ?? 0) + 1;
     return map;
   }, [membersData?.documents, tasks]);
-
-  // Prepare safeTasks for TaskRow usage (title required)
-  const safeTasks = tasks.map((t) => ({ $id: t.$id, title: t.title ?? "Untitled", status: t.status, dueDate: t.dueDate, projectId: t.projectId, assigneeId: t.assigneeId }));
 
   const projectsById: Record<string, ProjectDoc> = {};
   projects.forEach((p) => (projectsById[p.$id] = p));
@@ -100,7 +98,7 @@ export default function HomeAnalytics({ workspaceId }: { workspaceId: string }) 
   const router = useRouter();
 
   const membersByUserId: Record<string, { $id: string; userId: string; name?: string; email?: string }> = {};
-  (membersData?.documents ?? []).forEach((m: any) => (membersByUserId[m.userId] = { $id: m.$id, userId: m.userId, name: m.name, email: m.email }));
+  (membersData?.documents ?? [] as MemberDoc[]).forEach((m: MemberDoc) => (membersByUserId[m.userId] = { $id: m.$id, userId: m.userId, name: m.name, email: m.email }));
 
   // Create task modal
   const [createOpen, setCreateOpen] = useState(false);
@@ -173,7 +171,7 @@ export default function HomeAnalytics({ workspaceId }: { workspaceId: string }) 
             <h3 className="text-sm font-semibold mb-2">Tasks</h3>
             <div ref={listRef} className="mt-3 space-y-3 h-[360px] overflow-auto">
               {isLoading ? <div>Loading...</div> : visible.map((t) => (
-                <TaskRow key={t.$id} t={t as any} projectsById={projectsById} membersByUserId={membersByUserId as any} workspaceId={workspaceId} setEditingTask={() => {}} setIsEditOpen={() => {}} deleteMutation={deleteMutation} confirmDelete={confirmDelete} router={{ push: (u: string) => window.location.assign(u) }} />
+                <TaskRow key={t.$id} t={{ ...t, title: t.title ?? "Untitled" }} projectsById={projectsById} membersByUserId={membersByUserId} workspaceId={workspaceId} setEditingTask={() => {}} setIsEditOpen={() => {}} deleteMutation={deleteMutation} confirmDelete={confirmDelete} router={{ push: (u: string) => window.location.assign(u) }} />
               ))}
               {filteredTasks.length === 0 && <div className="text-sm text-muted-foreground">No tasks in this workspace yet.</div>}
             </div>

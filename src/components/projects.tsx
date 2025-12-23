@@ -2,8 +2,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { RiAddCircleFill } from "react-icons/ri";
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { cn } from "@/lib/utils";
 import { useGetProjects } from "@/features/projects/api/use-get-projects";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";

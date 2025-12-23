@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import React, { Suspense } from "react";
 import { Projects } from "./projects";
 import { DottedSeparator } from "./dotted-separator";
 import { Navigation } from "./navigation"; 
@@ -13,11 +14,17 @@ export const SideBar = () => {
         <Image src="/logo.svg" alt="Logo" width={164} height={48} />
       </Link>
       <DottedSeparator className="my-4" />
-      <WorkspaceSwitcher />
+      <Suspense fallback={null}>
+        <WorkspaceSwitcher />
+      </Suspense>
       <DottedSeparator className="my-4" />
-      <Navigation />
+      <Suspense fallback={null}>
+        <Navigation />
+      </Suspense>
       <DottedSeparator className="my-4" />
-      <Projects />
+      <Suspense fallback={null}>
+        <Projects />
+      </Suspense>
     </aside>
   );
 };

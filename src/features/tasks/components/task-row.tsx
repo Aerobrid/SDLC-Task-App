@@ -26,7 +26,6 @@ type Props = {
   projectsById: Record<string, ProjectDoc>;
   membersByUserId: Record<string, MemberDoc>;
   workspaceId: string | number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setEditingTask: React.Dispatch<React.SetStateAction<any | null>>;
   setIsEditOpen: (v: boolean) => void;
   deleteMutation: { mutate: (args: { id: string; workspaceId: string }) => void };

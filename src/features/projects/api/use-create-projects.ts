@@ -3,7 +3,6 @@ import { toast } from "sonner";
 // we can use this hook since we wrapped the app with the QueryProvider in layout.tsx
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 // hono helpers to figure out request and response types for login API call
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // to make API calls, we import the client from our RPC library
 import { client } from "@/lib/rpc";

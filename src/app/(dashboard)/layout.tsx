@@ -3,6 +3,7 @@ import { Navbar } from '@/components/navbar';
 
 import { CreateWorkspaceModel } from '@/features/workspaces/components/create-workspace-model';
 import { CreateProjectModel } from '@/features/projects/components/create-project-model';
+import React, { Suspense } from 'react';
 
 interface DashBoardLayoutProps {
   children: React.ReactNode;
@@ -11,8 +12,10 @@ interface DashBoardLayoutProps {
 const DashBoardLayout = ({ children }: DashBoardLayoutProps) => {
   return (
     <div className="min-h-screen">
-      <CreateWorkspaceModel />
-      <CreateProjectModel />
+      <Suspense fallback={null}>
+        <CreateWorkspaceModel />
+        <CreateProjectModel />
+      </Suspense>
       <div className="flex w-full h-full">
         <div className="fixed left-0 top-0 hidden lg:block lg:w-[264px] h-full overflow-y-auto">
           <SideBar />

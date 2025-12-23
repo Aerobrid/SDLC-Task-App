@@ -7,8 +7,6 @@ import { useGetWorkspaces } from "@/features/workspaces/api/use-get-workspaces";
 import { WorkspaceAvatar } from "@/features/workspaces/components/workspace-avatar";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useCreateWorkspaceModel } from "@/features/workspaces/hooks/use-create-workspace-model";
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Select,
   SelectContent,
