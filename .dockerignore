@@ -1,0 +1,10 @@
+node_modules
+.next
+dist
+.vscode
+.git
+.github
+.gitignore
+.env
+.env.local
+coverage
