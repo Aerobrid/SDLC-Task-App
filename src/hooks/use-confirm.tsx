@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 
 import { Button, type ButtonProps } from "@/components/ui/button";
