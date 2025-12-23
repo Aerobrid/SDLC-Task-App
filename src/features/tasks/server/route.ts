@@ -22,7 +22,7 @@ function normalizeStatus(s: unknown) {
 }
 
 function sendError(c: Context, message: string, status = 400) {
-  return c.json({ error: message }, { status });
+  return c.json({ error: message }, status as any);
 }
 
 const app = new Hono();
