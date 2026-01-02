@@ -20,8 +20,9 @@ export const useGetMembers = ({ workspaceId }: UseGetMembersProps) => {
           // make get request to the API endpoint to fetch current user data
           const response = await client.api.members.$get({ query: { workspaceId } });
 
-          // if the response is not ok, return null
+          // if the response is not ok, handle 401 gracefully
           if (!response.ok) {
+            if (response.status === 401) return { documents: [], total: 0 } as any;
             throw new Error("Failed to fetch members");
           }
 

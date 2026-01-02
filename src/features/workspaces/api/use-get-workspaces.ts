@@ -16,10 +16,14 @@ export const useGetWorkspaces = () => {
           // make get request to the API endpoint to fetch current user data
           const response = await client.api.workspaces.$get();
 
-          // if the response is not ok, return null
-          if (!response.ok) {
-            throw new Error("Failed to fetch workspaces");
-          }
+            // if the response is not ok, handle 401 (unauthenticated) gracefully
+            if (!response.ok) {
+              if (response.status === 401) {
+                // user is not authenticated — return empty result so UI can render unauthenticated state
+                return { documents: [], total: 0 } as any;
+              }
+              throw new Error("Failed to fetch workspaces");
+            }
 
           // parse the JSON response to get the current user data
           const { data } = await response.json();

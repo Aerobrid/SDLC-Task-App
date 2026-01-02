@@ -45,7 +45,7 @@ const app = new Hono()
         // Clean up APPWRITE_ENDPOINT to avoid double /v1
         const endpoint = APPW_ENDPOINT.replace(/\/v1$/, "");
 
-        uploadedImageUrl = `${endpoint}/v1/storage/buckets/${IMAGES_BUCKET_ID}/files/${uploadedImageId}/view?project=${APPW_PROJECT_ID}&mode=admin`;
+        uploadedImageUrl = `${endpoint}/v1/storage/buckets/${IMAGES_BUCKET_ID}/files/${uploadedImageId}/view?project=${APPW_PROJECT_ID}`;
       }
 
       const projectData: Record<string, unknown> = {
@@ -139,7 +139,7 @@ app
         );
 
         const endpoint = APPW_ENDPOINT.replace(/\/v1$/, "");
-        uploadedImageUrl = `${endpoint}/v1/storage/buckets/${IMAGES_BUCKET_ID}/files/${file.$id}/view?project=${APPW_PROJECT_ID}&mode=admin`;
+        uploadedImageUrl = `${endpoint}/v1/storage/buckets/${IMAGES_BUCKET_ID}/files/${file.$id}/view?project=${APPW_PROJECT_ID}`;
 
         updateData.imageUrl = uploadedImageUrl;
       } else if (typeof image === "string") {

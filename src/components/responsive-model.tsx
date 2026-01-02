@@ -3,6 +3,8 @@ import { useMedia } from 'react-use';
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 
 import {
@@ -27,7 +29,8 @@ export const ResponsiveModel = ({
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="w-full sm:max-w-lg p-0 border-none overflow-y-auto hide-scrollbar max-h-[85vh]" aria-label="Dialog">
-          <div className="sr-only">Dialog</div>
+          <DialogTitle className="sr-only">Dialog</DialogTitle>
+          <DialogDescription className="sr-only">Dialog content</DialogDescription>
           {children}
         </DialogContent>
       </Dialog>

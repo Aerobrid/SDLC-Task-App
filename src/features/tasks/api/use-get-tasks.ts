@@ -24,7 +24,10 @@ export const useGetTasks = ({ workspaceId, projectIds, assigneeIds, statuses, du
 
       const response = await client.api.tasks.$get({ query: Object.fromEntries(params) });
 
-      if (!response.ok) throw new Error("Failed to fetch tasks");
+      if (!response.ok) {
+        if (response.status === 401) return { data: [], counts: {} } as any;
+        throw new Error("Failed to fetch tasks");
+      }
 
       const { data, counts } = await response.json();
       return { data, counts };
