@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 // for query management (allows you to fetch, cache, and update data easily without having to manage the state manually)
 import { QueryProvider } from "@/components/query-provider";
 import { Toaster } from "@/components/ui/sonner";
+import DatadogRUM from "@/components/datadog-rum";
 
 // importing global styles
 import "./globals.css";
@@ -41,6 +42,7 @@ export default function RootLayout({
         {/* QueryProvider is used to provide the query client to the application */}
         {/* This allows you to use the useQuery and useMutation hooks in your components */}
         <QueryProvider>
+          <DatadogRUM />
           <Toaster />
           {children}
         </QueryProvider>

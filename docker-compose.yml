@@ -1,0 +1,41 @@
+services:
+  datadog-agent:
+    image: gcr.io/datadoghq/agent:latest
+    container_name: datadog-agent
+    env_file: .env.local
+    environment:
+      - DD_API_KEY=${DATADOG_API_KEY}
+      - DD_APM_ENABLED=true
+      - DD_LOGS_ENABLED=true
+      - DD_PROCESS_AGENT_ENABLED=false
+      - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
+      - DD_SITE=${NEXT_PUBLIC_DATADOG_SITE}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - ddnet
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_DATADOG_CLIENT_TOKEN: ${NEXT_PUBLIC_DATADOG_CLIENT_TOKEN}
+        NEXT_PUBLIC_DATADOG_RUM_APP_ID: ${NEXT_PUBLIC_DATADOG_RUM_APP_ID}
+        NEXT_PUBLIC_DATADOG_SITE: ${NEXT_PUBLIC_DATADOG_SITE}
+        NEXT_PUBLIC_APPWRITE_ENDPOINT: ${NEXT_PUBLIC_APPWRITE_ENDPOINT}
+        NEXT_PUBLIC_APPWRITE_PROJECT: ${NEXT_PUBLIC_APPWRITE_PROJECT}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+    image: jira-clone:local
+    container_name: jira-clone
+    env_file: .env.local
+    ports:
+      - "3000:3000"
+    depends_on:
+      - datadog-agent
+    networks:
+      - ddnet
+
+networks:
+  ddnet:
+    driver: bridge
