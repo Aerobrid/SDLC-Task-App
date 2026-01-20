@@ -19,7 +19,7 @@ ENV NODE_ENV=production
 # Install dependencies 
 COPY package.json ./
 COPY package-lock.json ./
-RUN npm ci
+RUN npm install
 
 # Copy source files, run the build step, and remove dev-only deps
 COPY . .
