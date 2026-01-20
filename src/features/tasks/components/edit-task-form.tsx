@@ -29,6 +29,14 @@ type Task = {
 
 type Props = { task: Task; workspaceId: string; onSuccess?: () => void; onCancel?: () => void };
 
+// Helper to validate priority value (outside component to prevent re-creation)
+const getValidPriority = (priority?: string): "low" | "medium" | "high" => {
+  if (priority === "low" || priority === "medium" || priority === "high") {
+    return priority;
+  }
+  return "medium";
+};
+
 export const EditTaskForm = ({ task, workspaceId, onSuccess, onCancel }: Props) => {
   const createTaskInputSchema = createTaskSchema.omit({ workspaceId: true }).partial();
   const { data: membersData } = useGetMembers({ workspaceId });
@@ -48,7 +56,7 @@ export const EditTaskForm = ({ task, workspaceId, onSuccess, onCancel }: Props) 
       description: task?.description ?? "",
       status: (task?.status ?? "todo") as CreateInput["status"],
       assigneeId: task?.assigneeId ?? "",
-      priority: (task?.priority as CreateInput["priority"]) ?? "medium",
+      priority: getValidPriority(task?.priority),
       projectId: task?.projectId ?? "",
       dueDate: task?.dueDate ?? undefined,
     },
@@ -60,12 +68,13 @@ export const EditTaskForm = ({ task, workspaceId, onSuccess, onCancel }: Props) 
       description: task?.description ?? "",
       status: (task?.status ?? "todo") as CreateInput["status"],
       assigneeId: task?.assigneeId ?? "",
-      priority: (task?.priority as CreateInput["priority"]) ?? "medium",
+      priority: getValidPriority(task?.priority),
       projectId: task?.projectId ?? "",
       dueDate: task?.dueDate ?? undefined,
     });
     setSelectedDate(task?.dueDate ? new Date(task.dueDate) : undefined);
-  }, [task, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task]);
 
   const update = useUpdateTask();
 

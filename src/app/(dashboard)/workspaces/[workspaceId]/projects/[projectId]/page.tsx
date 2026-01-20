@@ -12,6 +12,7 @@ import DataKanban from "@/features/tasks/components/data-kanban";
 import DataCalendar from "@/features/tasks/components/data-calendar";
 import TaskRow from "@/features/tasks/components/task-row";
 import CreateTaskForm from "@/features/tasks/components/create-task-form";
+import { EditTaskForm } from "@/features/tasks/components/edit-task-form";
 import { Button } from "@/components/ui/button";
 import { useDeleteTask } from "@/features/tasks/api/use-delete-task";
 import { useConfirm } from "@/hooks/use-confirm";
@@ -28,7 +29,7 @@ interface ProjectDoc extends Project {
 
 type WorkspaceDoc = { $id: string; name?: string };
 
-type TaskDoc = { $id: string; title?: string; status?: string; dueDate?: string; projectId?: string; assigneeId?: string };
+type TaskDoc = { $id: string; title?: string; status?: string; dueDate?: string; projectId?: string; assigneeId?: string; priority?: string };
 
 // UI task type used by the task components (title is required)
 type UITask = { $id: string; title: string; projectId?: string; assigneeId?: string; assigneeName?: string; status?: string; priority?: string; dueDate?: string };
@@ -69,6 +70,7 @@ export default function ProjectPage({ params }: { params: { workspaceId: string;
     status: t.status,
     dueDate: t.dueDate,
     projectId: t.projectId,
+    priority: t.priority,
     // If a task has no assignee, default to current user (this page is "Assigned to you")
     assigneeId: t.assigneeId ?? userId,
     assigneeName: t.assigneeId ? undefined : currentUser?.name,
@@ -106,6 +108,10 @@ export default function ProjectPage({ params }: { params: { workspaceId: string;
 
   // create task modal
   const [createOpen, setCreateOpen] = useState(false);
+
+  // edit task modal
+  const [editingTask, setEditingTask] = useState<UITask | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   // edit project modal initial handled above
 
@@ -223,7 +229,7 @@ export default function ProjectPage({ params }: { params: { workspaceId: string;
 
                   <div ref={listRef} className="space-y-3 h-[360px] overflow-auto">
                     {visible.map((t) => (
-                      <TaskRow key={t.$id} t={t} projectsById={projectsFullMap} membersByUserId={membersByUserId} workspaceId={workspaceId} setEditingTask={() => {}} setIsEditOpen={() => {}} deleteMutation={deleteMutation} confirmDelete={confirmDelete} router={{ push: (u: string) => window.location.assign(u) }} />
+                      <TaskRow key={t.$id} t={t} projectsById={projectsFullMap} membersByUserId={membersByUserId} workspaceId={workspaceId} setEditingTask={setEditingTask} setIsEditOpen={setIsEditOpen} deleteMutation={deleteMutation} confirmDelete={confirmDelete} router={{ push: (u: string) => window.location.assign(u) }} />
                     ))}
                   </div>
                   <div className="absolute bottom-3 right-3 flex items-center gap-2">
@@ -256,6 +262,20 @@ export default function ProjectPage({ params }: { params: { workspaceId: string;
       <ResponsiveModel open={createOpen} onOpenChange={setCreateOpen}>
         <CreateTaskForm projectId={projectId} projectName={project?.name} onSuccess={() => setCreateOpen(false)} onCancel={() => setCreateOpen(false)} />
       </ResponsiveModel>
+
+      {editingTask && (
+        <ResponsiveModel open={isEditOpen} onOpenChange={setIsEditOpen}>
+          <div className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Edit Task</h2>
+            <EditTaskForm 
+              task={editingTask} 
+              workspaceId={workspaceId} 
+              onSuccess={() => { setIsEditOpen(false); setEditingTask(null); }} 
+              onCancel={() => { setIsEditOpen(false); setEditingTask(null); }} 
+            />
+          </div>
+        </ResponsiveModel>
+      )}
 
       <ConfirmDialog />
     </>

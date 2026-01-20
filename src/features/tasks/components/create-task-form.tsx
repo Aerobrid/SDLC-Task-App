@@ -54,9 +54,9 @@ export const CreateTaskForm = ({ projectId, projectName, onSuccess, onCancel }: 
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
-  const form = useForm<z.infer<typeof createTaskInputSchema> & { priority?: string; dueDate?: string }>({
+  const form = useForm<z.infer<typeof createTaskInputSchema>>({
     resolver: zodResolver(createTaskInputSchema),
-    defaultValues: { title: "", description: "", status: "todo", assigneeId: "", priority: "medium", dueDate: undefined },
+    defaultValues: { title: "", description: "", status: "todo", assigneeId: "", priority: "medium", projectId: "", dueDate: "" },
   });
 
   // If this form is rendered for a specific project, ensure the form value is set
@@ -64,7 +64,8 @@ export const CreateTaskForm = ({ projectId, projectName, onSuccess, onCancel }: 
     if (projectId) {
       form.setValue("projectId", projectId as unknown as string);
     }
-  }, [projectId, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
 
   const onSubmit = (values: z.infer<typeof createTaskInputSchema>) => {
     // Ensure a date is present (time is optional). If time is not provided, default to 00:00.
@@ -135,7 +136,7 @@ export const CreateTaskForm = ({ projectId, projectName, onSuccess, onCancel }: 
                 {projectId ? (
                   <Input value={projectName ?? projectId} disabled />
                 ) : (
-                  <Select onValueChange={(v) => field.onChange(v)}>
+                  <Select value={field.value} onValueChange={(v) => field.onChange(v)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select project" />
                     </SelectTrigger>
@@ -155,7 +156,7 @@ export const CreateTaskForm = ({ projectId, projectName, onSuccess, onCancel }: 
             <FormItem>
               <FormLabel>Status</FormLabel>
               <FormControl>
-                <Select onValueChange={(v) => field.onChange(v)}>
+                <Select value={field.value} onValueChange={(v) => field.onChange(v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -176,7 +177,7 @@ export const CreateTaskForm = ({ projectId, projectName, onSuccess, onCancel }: 
             <FormItem>
               <FormLabel>Priority</FormLabel>
               <FormControl>
-                <Select onValueChange={(v) => field.onChange(v)}>
+                <Select value={field.value} onValueChange={(v) => field.onChange(v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
@@ -196,7 +197,7 @@ export const CreateTaskForm = ({ projectId, projectName, onSuccess, onCancel }: 
           <FormItem>
             <FormLabel>Assignee</FormLabel>
             <FormControl>
-              <Select onValueChange={(v) => field.onChange(v)}>
+              <Select value={field.value} onValueChange={(v) => field.onChange(v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select assignee" />
                 </SelectTrigger>
