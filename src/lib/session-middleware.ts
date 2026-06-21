@@ -34,9 +34,21 @@ type AdditionalContext = {
 // if authenticated, it sets the account, databases, storage, and user in the context 
 export const sessionMiddleware = createMiddleware<AdditionalContext>(
   async (c, next) => {
+    const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
+    const project = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
+
+    if (!endpoint || !project) {
+      return c.json({
+        error: "Internal Server Error",
+        message: `Appwrite configuration is missing: ` +
+                 `NEXT_PUBLIC_APPWRITE_ENDPOINT=${endpoint ? "set" : "missing"}, ` +
+                 `NEXT_PUBLIC_APPWRITE_PROJECT=${project ? "set" : "missing"}`
+      }, 500);
+    }
+
     const client = new Client()
-			.setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-			.setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT!);
+			.setEndpoint(endpoint)
+			.setProject(project);
 
 			const session = getCookie(c, AUTH_COOKIE);
 

@@ -14,6 +14,27 @@ import tasks from "@/features/tasks/server/route";
 // creating a new Hono application instance with a base path of /api
 const app = new Hono().basePath("/api");
 
+app.onError((err, c) => {
+  console.error(`[API Error] ${c.req.method} ${c.req.url}:`, err);
+  
+  // Appwrite errors (and some others) include a numeric 'code' field representing the HTTP status.
+  let status = 500;
+  if (err && typeof err === "object" && "code" in err && typeof (err as any).code === "number") {
+    const code = (err as any).code;
+    if (code >= 400 && code < 600) {
+      status = code;
+    }
+  }
+
+  return c.json(
+    {
+      error: err.message || "Internal Server Error",
+      stack: err.stack,
+    },
+    status as any
+  );
+});
+
 // attach modular routes to the app instance
 app
   .route("/auth", auth)
