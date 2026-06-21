@@ -2,6 +2,11 @@
 
 This repository is a production-oriented CRUD and Agile SDLC application for task and workspace management, built with Next.js (App Router) and TypeScript. It demonstrates end-to-end frontend and backend integration, complex state and UI (Kanban, Calendar, Table), and analytics surfaces designed to support software development workflows.
 
+<img width="1920" height="1080" alt="SDLC_gitub_readme_1" src="https://github.com/user-attachments/assets/32132d57-37f1-4689-92bf-417c247b0a26" />
+<img width="1920" height="1080" alt="SDLC_gitub_readme_2" src="https://github.com/user-attachments/assets/1e53846a-9e8b-4668-a52f-10c37c378ddf" />
+<img width="1920" height="1080" alt="SDLC_gitub_readme_3" src="https://github.com/user-attachments/assets/c074a0a8-f918-44fb-b833-596855ba4431" />
+
+
 ---
 
 ## Why this project matters
